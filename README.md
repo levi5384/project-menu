@@ -1,0 +1,35 @@
+# Project Menu
+
+A small, local, single-page app for organizing personal projects into a tree of
+domains, projects, and subtasks, with tags for context (e.g. "From home",
+"Quick (< 15 min)") so you can pick something that fits the moment.
+
+Everything runs on your own computer. Nothing is sent anywhere.
+
+## Running it
+
+Requires Python 3 (no extra packages).
+
+- Windows: double-click `Open Project Menu.bat`
+- Any OS: `python server.py` (optional: `python server.py 9000 --no-browser`)
+
+It opens http://127.0.0.1:8765. The server only listens on 127.0.0.1.
+
+Your data is saved to `projects.json`, and attached files go into `media/`, both
+next to `server.py`. On first run the app starts with sample projects. Replace
+them with your own.
+
+You can also open `index.html` directly in a browser without the server. Data is
+then kept in the browser's localStorage, and file attachments are unavailable.
+
+## Keyboard
+
+- Arrow keys move the highlight through the tree. Right goes deeper (down to
+  subtasks), Left goes back up, and Left on a top-level item clears it.
+- Escape clears the highlight.
+
+## Tree view options
+
+- Show subtasks: display subtasks as nodes in the tree.
+- Align tips: line up all visible end nodes in one column.
+- Expand all / collapse branches.

@@ -1,0 +1,1389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Palette: herbarium mount board, pine ink, branches in natural-dye colors */
+:root {
+  --bg: #e8ebe3;
+  --surface: #f7f8f4;
+  --surface-2: #dfe3d8;
+  --ink: #1d2620;
+  --ink-soft: #5b675d;
+  --line: #ccd3c5;
+  --branch: #a3ad9f;
+  --accent: #2f5d46;
+  --accent-ink: #f4f7f2;
+  --danger: #a3402f;
+  --shadow: 0 1px 2px rgba(20,35,25,.06), 0 8px 24px rgba(20,35,25,.09);
+  --radius: 8px;
+  --serif: Fraunces, Georgia, serif;
+  --sans: Inter, system-ui, sans-serif;
+  /* madder, indigo, weld, verdigris, logwood, onion skin, walnut, slate */
+  --b0: #a8443a; --b1: #355c8c; --b2: #8f7412; --b3: #3f7d5e; --b4: #7a4a85; --b5: #ad5f22; --b6: #6e5038; --b7: #4f6670;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111613; --surface: #181e1a; --surface-2: #232b25; --ink: #e3e8df; --ink-soft: #97a296;
+    --line: #2b342d; --branch: #4c574e; --accent: #8cc5a3; --accent-ink: #0f1f16; --danger: #e58572;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    --b0: #e0806f; --b1: #86a9da; --b2: #d4b552; --b3: #7fc2a0; --b4: #b98fc4; --b5: #e19a5f; --b6: #c09f82; --b7: #93abb6;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111613; --surface: #181e1a; --surface-2: #232b25; --ink: #e3e8df; --ink-soft: #97a296;
+  --line: #2b342d; --branch: #4c574e; --accent: #8cc5a3; --accent-ink: #0f1f16; --danger: #e58572;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  --b0: #e0806f; --b1: #86a9da; --b2: #d4b552; --b3: #7fc2a0; --b4: #b98fc4; --b5: #e19a5f; --b6: #c09f82; --b7: #93abb6;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--sans); display: flex; flex-direction: column; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Header: one bar for views, search, filters and actions */
+header { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--surface); flex-wrap: wrap; position: relative; z-index: 6; }
+.brand { font-family: var(--serif); font-weight: 600; font-size: 19px; letter-spacing: -.01em; margin: 0 10px 0 0; white-space: nowrap; }
+.tabs { display: flex; gap: 2px; margin-right: 6px; }
+.tabs button { border: 0; background: transparent; padding: 6px 11px; border-radius: 6px; color: var(--ink-soft); font-weight: 500; }
+.tabs button:hover { color: var(--ink); }
+.tabs button.on { background: var(--surface-2); color: var(--ink); font-weight: 600; }
+.search { flex: 0 1 260px; min-width: 140px; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 5px 10px; }
+.search:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+.spacer { flex: 1; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 5px 11px; border-radius: 6px; white-space: nowrap; }
+.btn:hover { border-color: var(--branch); }
+a.btn { color: var(--ink); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.btn.danger { color: var(--danger); }
+.btn.small { padding: 3px 8px; font-size: 12px; }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--ink-soft); }
+.btn.ghost:hover { color: var(--ink); background: var(--surface-2); }
+.btn.active { border-color: var(--ink); }
+.badge { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: var(--ink); color: var(--bg); font-size: 11px; font-weight: 600; text-align: center; line-height: 17px; }
+.status { font-size: 12px; color: var(--ink-soft); }
+#status:empty { display: none; }
+.activeChips { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; min-width: 0; }
+.activeChips .mode { font-size: 12px; color: var(--ink-soft); margin-left: 2px; }
+
+.popwrap { position: relative; }
+.pop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 12px; width: 340px; max-width: calc(100vw - 32px); display: flex; flex-direction: column; gap: 10px; }
+.pop[hidden] { display: none; }
+.pop.right { left: auto; right: 0; width: 200px; padding: 5px; gap: 0; }
+.pop-title { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+.menuitem { border: 0; background: transparent; text-align: left; padding: 7px 10px; border-radius: 6px; }
+.menuitem:hover { background: var(--surface-2); }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; user-select: none; }
+button.chip { cursor: pointer; }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip .x { opacity: .7; margin-left: 1px; }
+.chip.mini { padding: 1px 7px; font-size: 11px; }
+.chip.inh { border-style: dashed; opacity: .75; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 3px 9px; font-size: 12px; color: var(--ink-soft); }
+.seg button.on { background: var(--surface-2); color: var(--ink); font-weight: 600; }
+label.check { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--ink-soft); }
+
+main { flex: 1; display: flex; min-height: 0; position: relative; }
+.view { flex: 1; min-width: 0; display: none; position: relative; }
+.view.on { display: block; }
+
+/* Tree */
+#treeWrap { position: absolute; inset: 0; overflow: hidden; cursor: grab; touch-action: none; }
+#treeWrap.dragging { cursor: grabbing; }
+#treeSvg { width: 100%; height: 100%; display: block; }
+.link { fill: none; stroke: var(--branch); stroke-width: 1.6; }
+.node circle { stroke: var(--surface); stroke-width: 2; cursor: pointer; }
+.node text { fill: var(--ink); font-size: 13px; cursor: pointer; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+.node .name-group { font-family: var(--serif); font-weight: 650; font-size: 14.5px; }
+.node .count { fill: var(--ink-soft); font-size: 11px; }
+.node.sel > circle { stroke: var(--ink); stroke-width: 2.5; }
+.node.collapsed circle { stroke-dasharray: 3 2; stroke: var(--ink); }
+.node .ring { fill: none; stroke: var(--ink) !important; stroke-width: 2 !important; stroke-dasharray: none !important; }
+.node.focus text { font-weight: 650; }
+.tasknode text { fill: var(--ink-soft); font-size: 12px; }
+.tasknode circle { stroke-width: 1.5; }
+.off { opacity: .32; filter: grayscale(1); }
+.dim { opacity: .25; }
+.off.dim { opacity: .15; }
+
+.focusbar { position: absolute; top: 12px; left: 16px; right: 16px; display: flex; align-items: center; gap: 2px; flex-wrap: wrap; pointer-events: none; }
+.focusbar > * { pointer-events: auto; }
+.focusbar .crumb { border: 0; background: var(--surface); padding: 3px 8px; border-radius: 6px; font-family: var(--serif); font-size: 13.5px; color: var(--ink-soft); box-shadow: 0 0 0 1px var(--line); }
+.focusbar .crumb:last-of-type { color: var(--ink); font-weight: 600; }
+.focusbar .crumb:hover { color: var(--ink); }
+.focusbar .sep { color: var(--ink-soft); padding: 0 3px; }
+.focusbar .btn { margin-left: 8px; }
+.focusbar[hidden] { display: none; }
+.treeControls { position: absolute; left: 16px; bottom: 14px; display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 3px; }
+kbd { font-family: system-ui, "Segoe UI", sans-serif; font-size: 11px; min-width: 20px; text-align: center; padding: 1px 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--surface); color: var(--ink); margin-right: 2px; }
+.empty { padding: 14px 12px; color: var(--ink-soft); font-size: 12.5px; }
+
+input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; margin: 2px 0 0; cursor: pointer; }
+
+/* Side panel */
+#panel { width: 380px; max-width: 100%; border-left: 1px solid var(--line); background: var(--surface); overflow: auto; display: none; flex-direction: column; }
+#panel.open { display: flex; }
+.pbody { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.crumbs { font-size: 12px; color: var(--ink-soft); }
+.crumbs a { color: inherit; cursor: pointer; }
+.crumbs a:hover { color: var(--accent); }
+.pname { font-family: var(--serif); font-weight: 600; font-size: 22px; border: 1px solid transparent; background: transparent; width: 100%; padding: 2px 4px; margin-left: -5px; border-radius: 6px; }
+.pname:hover, .pname:focus { border-color: var(--line); outline: none; background: var(--bg); }
+.section-title { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin: 0 0 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.section-title .sub { font-weight: 400; }
+textarea.notes { width: 100%; min-height: 60px; border: 1px solid var(--line); border-radius: 6px; padding: 8px; background: var(--bg); resize: vertical; }
+.taglist { display: flex; flex-wrap: wrap; gap: 6px; }
+.task { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 8px; padding: 7px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.task .ttext { border: 0; background: transparent; width: 100%; padding: 0; }
+.task .ttext:focus { outline: none; background: var(--bg); }
+.task.done .ttext { text-decoration: line-through; color: var(--ink-soft); }
+.task .tacts { display: flex; gap: 2px; }
+.iconbtn { border: 0; background: transparent; color: var(--ink-soft); padding: 0 4px; font-size: 13px; border-radius: 4px; }
+.iconbtn:hover { color: var(--ink); background: var(--surface-2); }
+.task .ttags { grid-column: 2 / 4; display: flex; flex-wrap: wrap; gap: 4px; }
+.task .tagedit { grid-column: 2 / 4; display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; background: var(--bg); border-radius: 6px; }
+.addrow { display: flex; gap: 6px; }
+.addrow input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; background: var(--bg); }
+.row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+select { border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; background: var(--bg); max-width: 100%; }
+.children a { display: inline-block; margin: 0 8px 4px 0; color: var(--accent); cursor: pointer; }
+
+/* Modal */
+.modal-bg { position: fixed; inset: 0; background: rgba(10,20,14,.4); display: none; align-items: center; justify-content: center; z-index: 30; padding: 16px; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--surface); border-radius: 12px; box-shadow: var(--shadow); width: 460px; max-width: 100%; max-height: 90vh; overflow: auto; padding: 18px; }
+.modal h2 { font-family: var(--serif); font-weight: 600; margin: 0 0 12px; font-size: 20px; }
+.tagrow { display: flex; gap: 8px; align-items: center; padding: 5px 0; }
+.tagrow input[type=text] { flex: 1; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: var(--bg); }
+.tagrow input[type=color] { width: 32px; height: 28px; border: 1px solid var(--line); border-radius: 6px; padding: 1px; background: var(--bg); }
+
+.help h3 { font-size: 13px; font-weight: 600; margin: 16px 0 6px; }
+.help h3:first-of-type { margin-top: 0; }
+.help ul { margin: 0; padding-left: 18px; color: var(--ink-soft); }
+.help li { margin: 4px 0; }
+.help li b { color: var(--ink); font-weight: 600; }
+.pick { font-size: 15px; padding: 14px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); margin-bottom: 12px; }
+.pick .path { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+/* To-do view */
+#todo { position: absolute; inset: 0; overflow: auto; padding: 14px 20px 24px; }
+.todo-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.todo-bar .when { font-family: var(--serif); font-weight: 650; font-size: 26px; margin: 0; display: flex; align-items: baseline; gap: 10px; letter-spacing: -.01em; }
+.todo-bar .when span { font-family: var(--sans); font-weight: 400; font-size: 14px; color: var(--ink-soft); letter-spacing: 0; }
+.todo-bar .nav { gap: 4px; }
+.todo-bar .nav .btn { min-width: 30px; }
+.btn.toggle { display: inline-flex; align-items: center; gap: 8px; }
+.btn.toggle .n { color: var(--ink-soft); font-size: 12px; font-weight: 600; }
+.btn.toggle.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn.toggle.on .n { color: var(--bg); opacity: .75; }
+.sec { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin: 22px 0 8px; }
+.sec.late { color: var(--danger); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; border-radius: 12px; }
+.tile { position: relative; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--tc); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; min-height: 120px; cursor: grab; }
+.tile:hover { border-color: var(--branch); border-top-color: var(--tc); }
+.tile.dragging { opacity: .4; }
+.tile.late { border-color: var(--danger); border-top-color: var(--tc); }
+.tile-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tile-head input { margin: 0; flex: none; }
+.tile-path { border: 0; background: none; padding: 0; font-size: 11.5px; color: var(--ink-soft); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; direction: rtl; }
+.tile-path:hover { color: var(--ink); text-decoration: underline; }
+.tile-txt { font-family: var(--serif); font-size: 17px; font-weight: 500; line-height: 1.25; flex: 1; overflow-wrap: anywhere; }
+.tile.done .tile-txt { text-decoration: line-through; color: var(--ink-soft); }
+.tile-foot { display: flex; align-items: center; gap: 8px; }
+.tdots { display: flex; gap: 3px; flex: 1; }
+.tdot { width: 8px; height: 8px; border-radius: 50%; }
+.tmeta { font-size: 11.5px; color: var(--ink-soft); }
+.datebtn { position: relative; font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); color: var(--ink); cursor: pointer; white-space: nowrap; }
+.datebtn.unset { background: transparent; color: var(--ink-soft); box-shadow: inset 0 0 0 1px var(--line); }
+.tile.late .datebtn { background: var(--danger); color: var(--surface); }
+.datebtn input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: 0; padding: 0; }
+.tile.compact { min-height: 0; padding: 7px 9px; gap: 3px; }
+.tile.compact .tile-txt { font-size: 14px; }
+.pmark { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--tc, var(--branch)); flex: none; }
+.tile-empty { grid-column: 1 / -1; padding: 28px; text-align: center; color: var(--ink-soft); border: 1px dashed var(--line); border-radius: 10px; }
+.dropzone.over { outline: 2px dashed var(--accent); outline-offset: 3px; }
+input.due { border: 1px solid var(--line); border-radius: 6px; background: var(--bg); padding: 2px 6px; font-size: 12px; color: var(--ink-soft); }
+input.due.has { color: var(--ink); }
+input.due.late { color: var(--danger); border-color: var(--danger); }
+.due-chip { font-size: 11px; color: var(--ink-soft); }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.wday { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; min-height: 180px; overflow: hidden; }
+.wday-h { border: 0; background: transparent; text-align: left; padding: 8px 10px; font-size: 12.5px; font-weight: 600; display: flex; justify-content: space-between; align-items: baseline; color: var(--ink-soft); }
+.wday-h span { font-family: var(--serif); font-size: 18px; color: var(--ink); }
+.wday.today { border-color: var(--accent); }
+.wday.today .wday-h, .wday.today .wday-h span { color: var(--accent); }
+.wday .wbody { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 0 6px 6px; }
+
+/* Media */
+.mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; margin-bottom: 8px; }
+.mgrid:empty { display: none; }
+.mtile { position: relative; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--bg); aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-decoration: none; color: var(--ink); padding: 6px; text-align: center; }
+.mtile img, .mtile video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+.mtile.wide { grid-column: 1 / -1; aspect-ratio: auto; align-items: stretch; gap: 4px; }
+.mtile.wide audio { width: 100%; height: 34px; }
+.mtile .ext { font-weight: 600; font-size: 13px; color: var(--accent); letter-spacing: .05em; }
+.mtile .nm { font-size: 11px; color: var(--ink-soft); word-break: break-word; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.mtile .cap { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent, rgba(0,0,0,.65)); color: #fff; font-size: 10.5px; padding: 10px 5px 3px; text-align: left; pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mtile.wide .nm { text-align: left; }
+.mtile .mdel { position: absolute; top: 3px; right: 3px; z-index: 2; background: rgba(0,0,0,.55); color: #fff; border: 0; border-radius: 4px; font-size: 11px; padding: 0 5px; line-height: 17px; opacity: 0; }
+.mtile:hover .mdel, .mtile:focus-within .mdel { opacity: 1; }
+@media (hover: none) { .mtile .mdel { opacity: 1; } }
+.madd { gap: 6px; }
+.madd input { flex: 1; min-width: 120px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: var(--bg); font-size: 12.5px; }
+.media.over { outline: 2px dashed var(--accent); outline-offset: 4px; border-radius: 6px; }
+.btn.rec { color: var(--danger); border-color: var(--danger); font-weight: 600; }
+.modal.wide { width: 920px; }
+.lightbox img, .lightbox video { max-width: 100%; max-height: 75vh; display: block; margin: 0 auto; border-radius: 8px; }
+.task .ttags .due, .task .ttags .chip { vertical-align: middle; }
+
+@media (max-width: 900px) { .week { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } .wday { min-height: 120px; } }
+@media (max-width: 760px) {
+  #panel.open { position: absolute; inset: 0; width: 100%; z-index: 5; }
+  header { padding: 8px 12px; }
+  .brand { font-size: 17px; }
+  .search { order: 10; flex: 1 1 100%; max-width: none; }
+  #btnPick .long { display: none; }
+  .tile { min-height: 0; }
+  .wday { min-height: 64px; }
+  .todo-bar .when { font-size: 22px; flex-wrap: wrap; column-gap: 10px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Project Menu</div>
+  <nav class="tabs" aria-label="Views">
+    <button id="tabTree" class="on">Tree</button>
+    <button id="tabTodo">To-do</button>
+  </nav>
+  <input class="search" id="search" type="search" placeholder="Search projects and tasks" aria-label="Search projects and tasks">
+  <div class="popwrap">
+    <button class="btn" id="btnFilter" aria-haspopup="true" aria-expanded="false">Filter</button>
+    <div class="pop" id="filterPop" hidden></div>
+  </div>
+  <div class="activeChips" id="activeChips"></div>
+  <div class="spacer"></div>
+  <span class="status" id="status"></span>
+  <button class="btn primary" id="btnPick">Pick something<span class="long"> for me</span></button>
+  <button class="btn ghost" id="btnHelp">Help</button>
+  <div class="popwrap">
+    <button class="btn ghost" id="btnMore" aria-haspopup="true" aria-expanded="false">More</button>
+    <div class="pop right" id="morePop" hidden>
+      <button class="menuitem" id="btnTags">Manage tags</button>
+      <button class="menuitem" id="btnExport">Export a backup</button>
+      <button class="menuitem" id="btnImport">Import a backup</button>
+    </div>
+  </div>
+  <input type="file" id="importFile" accept=".json,application/json" hidden>
+</header>
+
+<main>
+  <section class="view on" id="viewTree">
+    <div id="treeWrap"><svg id="treeSvg" role="tree" aria-label="Project tree"><g id="treeG"></g></svg></div>
+    <div class="focusbar" id="focusBar" hidden></div>
+    <div class="treeControls">
+      <button class="btn small ghost" id="btnFit">Fit</button>
+      <button class="btn small ghost" id="btnShowTasks">Show subtasks</button>
+      <button class="btn small ghost" id="btnAlignTips" aria-pressed="false" title="Line up the ends of all visible branches in one column">Align tips</button>
+      <button class="btn small ghost" id="btnExpandAll">Expand all</button>
+      <button class="btn small ghost" id="btnAddTop">New group</button>
+    </div>
+  </section>
+  <section class="view" id="viewTodo"><div id="todo"></div></section>
+  <aside id="panel"></aside>
+</main>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<input type="file" id="mediaFile" multiple hidden>
+
+<script>
+/* ---------- Seed data (used on first run only) ---------- */
+const SEED = {
+  version: 1,
+  tags: [
+    { id: "t_sit", name: "Sitting down", color: "#7b8fc4" },
+    { id: "t_home", name: "From home", color: "#c9a14a" },
+    { id: "t_dist", name: "OK while distracted", color: "#69a88a" },
+    { id: "t_focus", name: "Full concentration", color: "#b5615a" },
+    { id: "t_travel", name: "Traveling", color: "#a77bc4" },
+    { id: "t_out", name: "Outdoors", color: "#5c9a4d" },
+    { id: "t_quick", name: "Quick (< 15 min)", color: "#d08a4a" },
+    { id: "t_comp", name: "At the computer", color: "#5a8fb5" },
+    { id: "t_hands", name: "Hands-on", color: "#8a6f52" }
+  ],
+  nodes: [
+    { id: "n_arts", name: "Arts", parentId: null, tags: [], notes: "", tasks: [] },
+    { id: "n_wood", name: "Woodworking", parentId: "n_arts", tags: ["t_hands"], notes: "", tasks: [] },
+    { id: "n_box", name: "Keepsake Box", parentId: "n_wood", tags: [], notes: "", tasks: [
+      { id: "k1", text: "Sand and finish the lid", done: false, tags: ["t_sit", "t_home", "t_dist"] },
+      { id: "k2", text: "Buy hinges", done: false, tags: ["t_travel", "t_quick"] },
+      { id: "k3", text: "Cut the box joints", done: false, tags: ["t_home", "t_focus", "t_hands"] }
+    ]},
+    { id: "n_paint", name: "Painting", parentId: "n_arts", tags: ["t_hands"], notes: "", tasks: [
+      { id: "k4", text: "Sketch a landscape outdoors", done: false, tags: ["t_out"] }
+    ]},
+    { id: "n_home", name: "Home", parentId: null, tags: [], notes: "", tasks: [] },
+    { id: "n_cook", name: "Cooking", parentId: "n_home", tags: ["t_home"], notes: "", tasks: [
+      { id: "k5", text: "Cook food for the week", done: false, tags: ["t_home", "t_dist"] },
+      { id: "k6", text: "Try a new recipe", done: false, tags: ["t_home"] }
+    ]},
+    { id: "n_garden", name: "Garden", parentId: "n_home", tags: ["t_out"], notes: "", tasks: [
+      { id: "k7", text: "Plant spring seedlings", done: false, tags: ["t_out", "t_hands"] }
+    ]},
+    { id: "n_dig", name: "Digital Projects", parentId: null, tags: ["t_comp"], notes: "", tasks: [] },
+    { id: "n_site", name: "Personal Website", parentId: "n_dig", tags: [], notes: "", tasks: [
+      { id: "k8", text: "Write the About page", done: false, tags: ["t_comp", "t_focus"] }
+    ]},
+    { id: "n_menu", name: "Project Menu", parentId: "n_dig", tags: [], notes: "This app.", tasks: [
+      { id: "k9", text: "Replace the sample projects with my real ones", done: false, tags: ["t_sit", "t_dist"] }
+    ]}
+  ]
+};
+
+/* ---------- State & persistence ---------- */
+const LS_KEY = "projectMenu.data.v1";
+const UI_KEY = "projectMenu.ui.v1";
+let DB = null;
+let serverMode = false;
+let ui = { view: "tree", selected: null, collapsed: [], showTasks: false, filterTags: [], filterMode: "any", search: "", showDone: false, focus: null, lastChild: {}, alignTips: false };
+
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+async function load() {
+  try { const u = JSON.parse(lsGet(UI_KEY) || "null"); if (u) ui = Object.assign(ui, u); } catch (e) {}
+  try {
+    const r = await fetch("api/data", { cache: "no-store" });
+    if (r.ok) { serverMode = true; DB = await r.json(); }
+    else if (r.status === 404 && r.headers.get("X-Project-Menu") === "1") { serverMode = true; }
+  } catch (e) {}
+  if (!DB) { try { DB = JSON.parse(lsGet(LS_KEY) || "null"); } catch (e) {} }
+  if (!DB || !Array.isArray(DB.nodes)) { DB = JSON.parse(JSON.stringify(SEED)); save(); }
+  if (!serverMode) setStatus("Saving in this browser only", true);
+}
+
+let saveTimer = null;
+function save() {
+  lsSet(LS_KEY, JSON.stringify(DB));
+  if (!serverMode) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      const r = await fetch("api/data", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(DB, null, 2) });
+      setStatus(r.ok ? "Saved" : "Save failed", !r.ok);
+    } catch (e) { setStatus("Save failed. Is the server still running?", true); }
+  }, 400);
+}
+function saveUI() { lsSet(UI_KEY, JSON.stringify(ui)); }
+let statusTimer = null;
+function setStatus(s, sticky) {
+  const el = document.getElementById("status");
+  el.textContent = s; clearTimeout(statusTimer);
+  if (!sticky) statusTimer = setTimeout(() => { el.textContent = serverMode ? "" : "Saving in this browser only"; }, 1800);
+}
+function commit() { save(); render(); }
+
+/* ---------- Helpers ---------- */
+const uid = p => p + Math.random().toString(36).slice(2, 9);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const node = id => DB.nodes.find(n => n.id === id);
+const tag = id => DB.tags.find(t => t.id === id);
+const kids = id => DB.nodes.filter(n => n.parentId === id);
+function ancestors(id) { const out = []; let n = node(id); while (n) { out.unshift(n); n = n.parentId ? node(n.parentId) : null; } return out; }
+function descendants(id) { const out = []; const walk = pid => kids(pid).forEach(k => { out.push(k); walk(k.id); }); walk(id); return out; }
+function effectiveTags(task, n) {
+  const s = new Set(task.tags || []);
+  ancestors(n.id).forEach(a => (a.tags || []).forEach(t => s.add(t)));
+  return [...s];
+}
+function allTasks() {
+  const out = [];
+  DB.nodes.forEach(n => (n.tasks || []).forEach(t => out.push({ task: t, node: n, tags: effectiveTags(t, n) })));
+  return out;
+}
+function matchFields(text, path, tags, done) {
+  if (!ui.showDone && done) return false;
+  if (ui.search && !(text + " " + path).toLowerCase().includes(ui.search.toLowerCase())) return false;
+  if (ui.filterTags.length) {
+    const has = t => tags.includes(t);
+    if (ui.filterMode === "all" ? !ui.filterTags.every(has) : !ui.filterTags.some(has)) return false;
+  }
+  return true;
+}
+function matches(item) { return matchFields(item.task.text, pathStr(item.node), item.tags, item.task.done); }
+
+/* Dates (local, YYYY-MM-DD) */
+const pad2 = n => String(n).padStart(2, "0");
+const ymd = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const parseYmd = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
+const todayYmd = () => ymd(new Date());
+const weekStart = s => { const d = parseYmd(s); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return ymd(d); };
+const fmtDate = (s, o) => parseYmd(s).toLocaleDateString(undefined, o);
+function dueLabel(s) {
+  const t = todayYmd();
+  if (s === t) return "Due today";
+  if (s === addDays(t, 1)) return "Due tomorrow";
+  if (s < t) return "Overdue: " + fmtDate(s, { month: "short", day: "numeric" });
+  return "Due " + fmtDate(s, { weekday: "short", month: "short", day: "numeric" });
+}
+function dueInput(key, val, done) {
+  const late = val && !done && val < todayYmd();
+  return `<input type="date" class="due ${val ? "has" : ""} ${late ? "late" : ""}" data-due="${key}" value="${val || ""}" title="Due date">`;
+}
+function objByKey(key) {
+  const i = key.indexOf(":"), kind = key.slice(0, i), id = key.slice(i + 1);
+  if (kind === "project") return node(id);
+  const f = findTask(id); return f ? f.t : null;
+}
+function setDue(key, val) { const o = objByKey(key); if (!o) return; if (val) o.due = val; else delete o.due; commit(); }
+function bindDue(root) { root.querySelectorAll("[data-due]").forEach(el => el.onchange = () => setDue(el.dataset.due, el.value)); }
+const filtersActive = () => ui.filterTags.length > 0 || !!ui.search;
+function pathStr(n) { return ancestors(n.id).map(a => a.name).join(" / "); }
+function chipHTML(t, extra = "") { return t ? `<span class="chip mini ${extra}"><span class="dot" style="background:${esc(t.color)}"></span>${esc(t.name)}</span>` : ""; }
+
+/* Branch colors by top-level group */
+const BRANCH = ["#4f7a4a", "#b0703a", "#4a6f9a", "#8a5a9a", "#a8483a", "#3f8a86", "#9a8a3a", "#6a6a6a"];
+function branchIndex(n) {
+  const tops = kids(null);
+  const top = ancestors(n.id)[0];
+  return Math.max(0, tops.indexOf(top)) % BRANCH.length;
+}
+function branchColor(n) { return BRANCH[branchIndex(n)]; }
+
+/* ---------- Header: search, filter popover, active filter chips ---------- */
+function renderFilterbar() {
+  const n = ui.filterTags.length;
+  const fbtn = document.getElementById("btnFilter");
+  fbtn.innerHTML = `Filter${n ? `<span class="badge">${n}</span>` : ""}`;
+  fbtn.classList.toggle("active", n > 0 || ui.showDone);
+  const ac = document.getElementById("activeChips");
+  ac.innerHTML = ui.filterTags.map(tag).filter(Boolean).map(t =>
+    `<button class="chip on" data-rmft="${t.id}" title="Remove this filter"><span class="dot" style="background:${esc(t.color)}"></span>${esc(t.name)}<span class="x">&times;</span></button>`).join("") +
+    (n > 1 ? `<span class="mode">${ui.filterMode === "all" ? "all of these" : "any of these"}</span>` : "") +
+    (ui.showDone ? `<span class="mode">including completed</span>` : "");
+  ac.querySelectorAll("[data-rmft]").forEach(el => el.onclick = () => { ui.filterTags = ui.filterTags.filter(x => x !== el.dataset.rmft); saveUI(); render(); });
+  const s = document.getElementById("search");
+  if (document.activeElement !== s && s.value !== ui.search) s.value = ui.search;
+  const pop = document.getElementById("filterPop");
+  if (pop.hidden) return;
+  pop.innerHTML = `<div class="pop-title">Show tasks tagged</div>
+    <div class="taglist">${DB.tags.map(t => `<button class="chip ${ui.filterTags.includes(t.id) ? "on" : ""}" data-ft="${t.id}"><span class="dot" style="background:${esc(t.color)}"></span>${esc(t.name)}</button>`).join("")}</div>
+    <div class="row" style="justify-content:space-between">
+      <span class="row" style="gap:6px"><span class="status">Match</span><span class="seg"><button data-fm="any" class="${ui.filterMode === "any" ? "on" : ""}">Any tag</button><button data-fm="all" class="${ui.filterMode === "all" ? "on" : ""}">All tags</button></span></span>
+      <label class="check"><input type="checkbox" id="showDone" ${ui.showDone ? "checked" : ""}> Show completed</label>
+    </div>
+    ${filtersActive() || ui.showDone ? `<button class="btn small" id="clearF" style="align-self:flex-start">Clear filters</button>` : ""}`;
+  pop.querySelectorAll("[data-ft]").forEach(el => el.onclick = () => {
+    const id = el.dataset.ft;
+    ui.filterTags = ui.filterTags.includes(id) ? ui.filterTags.filter(x => x !== id) : [...ui.filterTags, id];
+    saveUI(); render();
+  });
+  pop.querySelectorAll("[data-fm]").forEach(el => el.onclick = () => { ui.filterMode = el.dataset.fm; saveUI(); render(); });
+  pop.querySelector("#showDone").onchange = e => { ui.showDone = e.target.checked; saveUI(); render(); };
+  const c = pop.querySelector("#clearF"); if (c) c.onclick = () => { ui.filterTags = []; ui.search = ""; ui.showDone = false; saveUI(); render(); };
+}
+function togglePop(id, force) {
+  const pop = document.getElementById(id);
+  const open = force !== undefined ? force : pop.hidden;
+  document.querySelectorAll(".pop").forEach(p => { if (p !== pop) { p.hidden = true; p.previousElementSibling?.setAttribute("aria-expanded", "false"); } });
+  pop.hidden = !open;
+  pop.previousElementSibling?.setAttribute("aria-expanded", String(open));
+  if (id === "filterPop" && open) renderFilterbar();
+}
+const anyPopOpen = () => [...document.querySelectorAll(".pop")].some(p => !p.hidden);
+document.addEventListener("click", e => { if (e.target.isConnected && !e.target.closest(".popwrap")) document.querySelectorAll(".pop").forEach(p => p.hidden = true); });
+(function setupSearch() {
+  const s = document.getElementById("search");
+  s.addEventListener("input", () => { ui.search = s.value; saveUI(); renderViews(); renderFilterbar(); });
+  s.addEventListener("keydown", e => { if (e.key === "Escape") { s.value = ""; ui.search = ""; saveUI(); renderViews(); s.blur(); e.stopPropagation(); } });
+})();
+
+/* ---------- Tree view (rectangular cladogram rooted at "All projects") ----------
+   Highlighting a project grows its lineage and subtree (BIG) and shrinks
+   everything else (SMALL). Layout changes are tweened so the eye can follow. */
+const COL = 230, ROW = 30, TROW = 22, BIG = 1.4, SMALL = 0.62;
+let view = { x: 40, y: 40, k: 1 };
+let lastLayout = null;
+let prevPos = null;
+let treeAnim = null;
+let treeAnchor = null;
+let drawnPos = null;
+let treeAnimTimer = null;
+let needFit = true;
+const measureCtx = document.createElement("canvas").getContext("2d");
+function textW(s, f) { measureCtx.font = f; return measureCtx.measureText(s).width; }
+
+/* The highlight (ui.focus) is either a project id or "t:" + a subtask id. Subtasks
+   are treated as nodes of the same hierarchy, one level below their project.
+   focusRef resolves a focus value to { key (layout key), n (project), t (subtask or null) }. */
+function focusRef(f = ui.focus) {
+  if (!f) return null;
+  if (String(f).startsWith("t:")) { const r = findTask(f.slice(2)); return r ? { key: f, n: r.n, t: r.t } : null; }
+  const n = node(f); return n ? { key: "n:" + f, n, t: null } : null;
+}
+const focusIdOf = v => v.type === "task" ? "t:" + v.t.id : v.n.id;
+function shownTasks(n, fa, ok) { return (n.tasks || []).filter(t => (ui.showDone || !t.done) && (!fa || ok(t))); }
+
+function focusSets() {
+  const r = focusRef();
+  if (!r) return null;
+  const fid = r.n.id, ft = r.t;
+  const desc = ft ? new Set() : new Set(descendants(fid).map(d => d.id));
+  const lineage = ancestors(fid);
+  const anc = new Set(lineage.map(a => a.id));
+  const top = lineage[0];
+  const domain = new Set([top.id, ...descendants(top.id).map(d => d.id)]);
+  const sub = id => !ft && (id === fid || desc.has(id));
+  return {
+    has: id => anc.has(id) || sub(id),
+    sub,
+    task: (t, n) => ft ? t.id === ft.id : sub(n.id),
+    // Same top-level domain as the highlight: greyed out but kept full size
+    domain: id => domain.has(id)
+  };
+}
+function isOn(v, fs) {
+  if (!fs || v.type === "root") return true;
+  return v.type === "task" ? fs.task(v.t, v.n) : fs.has(v.n.id);
+}
+
+function buildVisible() {
+  const collapsed = new Set(ui.collapsed);
+  const matchSet = new Set();
+  const fa = filtersActive();
+  allTasks().forEach(it => { if (matches(it)) matchSet.add(it.task.id); });
+  const q = ui.search.toLowerCase();
+  // A highlighted subtask keeps its project's subtasks on screen even when subtasks are hidden
+  const ft = focusRef(), ftn = ft && ft.t ? ft.n.id : null;
+  function make(n, depth) {
+    const sub = [n, ...descendants(n.id)];
+    const open = sub.reduce((a, x) => a + (x.tasks || []).filter(t => !t.done).length, 0);
+    const hits = sub.reduce((a, x) => a + (x.tasks || []).filter(t => matchSet.has(t.id)).length, 0)
+      + (q ? sub.filter(x => x.name.toLowerCase().includes(q)).length : 0);
+    const v = { type: "node", key: "n:" + n.id, n, depth, open, hits, collapsed: collapsed.has(n.id), children: [] };
+    if (!v.collapsed) {
+      v.children = kids(n.id).map(k => make(k, depth + 1));
+      if (ui.showTasks || n.id === ftn) {
+        (n.tasks || []).filter(t => ((ui.showDone || !t.done) && (!fa || matchSet.has(t.id))) || (ft && ft.t === t))
+          .forEach(t => v.children.push({ type: "task", key: "t:" + t.id, t, n, depth: depth + 1, children: [] }));
+      }
+    }
+    return v;
+  }
+  const root = { type: "root", key: "root", depth: 0, children: kids(null).map(k => make(k, 1)) };
+  return { root, fa };
+}
+
+function scaleOf(v, fs) {
+  if (!fs || v.type === "root") return 1;
+  // Only other top-level domains shrink; the rest of the highlighted domain keeps its size
+  return isOn(v, fs) || fs.domain(v.n.id) ? BIG : SMALL;
+}
+
+function layout(root, fs) {
+  let y = 0;
+  const all = [];
+  (function place(v) {
+    all.push(v);
+    v.s = scaleOf(v, fs);
+    v.x = v.depth * COL;
+    if (!v.children.length) { const h = (v.type === "task" ? TROW : ROW) * v.s; v.y = y + h / 2; y += h; return; }
+    // Leave room above for the group label and below for its count
+    const pad = v.type === "node" && v.children.some(c => c.type === "task") && v.children.length < 3;
+    if (pad) y += 14 * v.s;
+    v.children.forEach(place);
+    if (pad) y += 14 * v.s;
+    v.y = (v.children[0].y + v.children[v.children.length - 1].y) / 2;
+  })(root);
+  // Widen a column when a (scaled) group label would otherwise run into its parent's column
+  const colW = [];
+  all.forEach(v => {
+    if (v.type !== "node" || !v.children.length) return;
+    const r = 5 + Math.min(10, Math.sqrt(v.open) * 2.4);
+    colW[v.depth] = Math.max(colW[v.depth] || COL, (textW(v.n.name, "650 14.5px Fraunces, serif") + r + 4) * v.s + 28);
+  });
+  const colX = [0];
+  all.forEach(v => { for (let d = colX.length; d <= v.depth; d++) colX[d] = colX[d - 1] + (colW[d] || COL); v.x = colX[v.depth]; });
+  // Align tips: push every visible tip (leaf project or subtask) out to the deepest tip's column.
+  // Collapsed projects still count as internal nodes and stay at their depth.
+  if (ui.alignTips) {
+    const tips = all.filter(v => v.type !== "root" && !v.children.length && !v.collapsed);
+    const maxD = tips.reduce((m, v) => Math.max(m, v.depth), 0);
+    if (maxD) tips.forEach(v => { v.x = colX[maxD]; });
+  }
+  return all;
+}
+
+function drawTree(all, P, fs, fa) {
+  let links = "", nodes = "";
+  all.forEach(v => {
+    if (!v.children.length) return;
+    const p = P(v);
+    v.children.forEach(c => {
+      const q = P(c), isTask = c.type === "task";
+      const on = isOn(c, fs);
+      const dim = fa && !isTask && !c.hits;
+      const w = fs ? (on ? 2.4 : fs.domain(c.n.id) ? 1.6 : 1.1) : (isTask ? 1.2 : 1.6);
+      links += `<path class="link ${on ? "" : "off"} ${dim ? "dim" : ""}" d="M${p.x},${p.y} V${q.y} H${q.x}" style="stroke:${isTask ? "var(--branch)" : branchColor(c.n)};stroke-width:${w};${isTask ? "stroke-dasharray:2 3" : ""}"/>`;
+    });
+  });
+  all.forEach(v => {
+    const p = P(v);
+    if (v.type === "root") {
+      nodes += `<g class="node ${ui.selected === null && panelOpen ? "sel" : ""}" data-root="1" transform="translate(${p.x},${p.y})">
+        <circle r="7" style="fill:var(--ink)"/><text x="-12" y="4" text-anchor="end" class="name-group">All projects</text></g>`;
+      return;
+    }
+    const tf = `translate(${p.x},${p.y}) scale(${p.s})`;
+    if (v.type === "task") {
+      const on = isOn(v, fs);
+      const isFocus = ui.focus === v.key;
+      nodes += `<g class="node tasknode ${isFocus ? "focus" : ""} ${on ? "" : "off"}" data-task="${v.t.id}" data-nid="${v.n.id}" transform="${tf}">
+        ${isFocus ? `<circle class="ring" r="8"/>` : ""}
+        <circle r="4" style="fill:${v.t.done ? "var(--surface-2)" : "var(--surface)"};stroke:${branchColor(v.n)}"/>
+        <text x="9" y="4" ${v.t.done ? 'text-decoration="line-through"' : ""}>${esc(v.t.text)}</text></g>`;
+      return;
+    }
+    const n = v.n, col = branchColor(n);
+    const isLeaf = !v.children.length;
+    const r = 5 + Math.min(10, Math.sqrt(v.open) * 2.4);
+    const on = isOn(v, fs);
+    const isFocus = ui.focus === n.id;
+    const dim = fa && !v.hits;
+    const cntTxt = `${fa ? v.hits + "/" : ""}${v.open} open`;
+    const lbl = isLeaf
+      ? `<text x="${r + (isFocus ? 9 : 6)}" y="4.5">${esc(n.name)}${v.open ? `<tspan class="count" dx="8">${cntTxt}</tspan>` : ""}</text>`
+      : `<text x="${-(r + 4)}" y="${-(r + 3)}" text-anchor="end" class="name-group">${esc(n.name)}</text>`;
+    const cnt = v.open && !isLeaf ? `<text class="count" x="${-(r + 4)}" y="${r + 13}" text-anchor="end">${cntTxt}</text>` : "";
+    nodes += `<g class="node ${isFocus ? "focus" : ""} ${on ? "" : "off"} ${dim ? "dim" : ""} ${v.collapsed ? "collapsed" : ""}" data-nid="${n.id}" transform="${tf}">
+      ${isFocus ? `<circle class="ring" r="${r + 4.5}"/>` : ""}
+      <circle r="${r}" style="fill:${v.open ? col : "var(--surface)"};${v.open ? "" : "stroke:" + col + ";stroke-width:2"}"/>
+      ${lbl}${cnt}${v.collapsed ? `<text class="count" x="${r + 6}" y="${isLeaf ? 18 : 4.5}">+${descendants(n.id).length} hidden</text>` : ""}</g>`;
+  });
+  document.getElementById("treeG").innerHTML = links + nodes;
+}
+
+function renderTree() {
+  const { root, fa } = buildVisible();
+  const fs = focusSets();
+  const all = layout(root, fs);
+  const from = drawnPos || prevPos;
+  const to = new Map(all.map(v => [v.key, { x: v.x, y: v.y, s: v.s }]));
+  lastLayout = all; prevPos = to;
+  cancelAnimationFrame(treeAnim); clearTimeout(treeAnimTimer);
+  const anchorKey = treeAnchor; treeAnchor = null;
+  document.getElementById("btnShowTasks").textContent = ui.showTasks ? "Hide subtasks" : "Show subtasks";
+  const at = document.getElementById("btnAlignTips");
+  at.classList.toggle("active", !!ui.alignTips); at.setAttribute("aria-pressed", String(!!ui.alignTips));
+  renderFocusBar();
+  if (needFit || !from) {
+    needFit = false;
+    drawTree(all, v => to.get(v.key), fs, fa);
+    drawnPos = to;
+    fitTree();
+    return;
+  }
+  const a0 = anchorKey && from.get(anchorKey), a1 = anchorKey && to.get(anchorKey);
+  const sx = a0 ? view.x + a0.x * view.k : 0, sy = a0 ? view.y + a0.y * view.k : 0;
+  const changed = all.some(v => { const a = from.get(v.key), b = to.get(v.key); return !a || a.x !== b.x || a.y !== b.y || a.s !== b.s; });
+  const frame = e => {
+    const cur = new Map();
+    const P = v => {
+      let c = cur.get(v.key);
+      if (!c) { const b = to.get(v.key), a = from.get(v.key) || b; c = { x: a.x + (b.x - a.x) * e, y: a.y + (b.y - a.y) * e, s: a.s + (b.s - a.s) * e }; cur.set(v.key, c); }
+      return c;
+    };
+    drawTree(all, P, fs, fa);
+    drawnPos = cur;
+    if (a0 && a1) { const p = P({ key: anchorKey }); view.x = sx - p.x * view.k; view.y = sy - p.y * view.k; }
+    applyView();
+  };
+  let finished = false;
+  const finish = () => { if (finished) return; finished = true; cancelAnimationFrame(treeAnim); clearTimeout(treeAnimTimer); frame(1); if (ui.focus) ensureVisible(ui.focus); };
+  if (!changed || reduceMotion()) { finish(); return; }
+  const t0 = performance.now(), D = 300;
+  const step = t => {
+    const p = Math.min(1, (t - t0) / D);
+    if (p >= 1) { finish(); return; }
+    frame(1 - Math.pow(1 - p, 3));
+    treeAnim = requestAnimationFrame(step);
+  };
+  treeAnim = requestAnimationFrame(step);
+  // Animation frames pause in hidden windows; always land on the final layout
+  treeAnimTimer = setTimeout(finish, D + 60);
+}
+
+(function bindTreeEvents() {
+  const g = document.getElementById("treeG");
+  g.addEventListener("click", e => {
+    const el = e.target.closest(".node"); if (!el) return;
+    e.stopPropagation();
+    if (el.dataset.root) { openPanel(null); return; }
+    setFocus(el.dataset.task ? "t:" + el.dataset.task : el.dataset.nid, { open: true });
+  });
+  g.addEventListener("dblclick", e => {
+    const el = e.target.closest(".node"); if (!el) return;
+    e.stopPropagation();
+    const id = el.dataset.nid; if (!id || el.dataset.task) return;
+    if (!kids(id).length && !ui.showTasks) return;
+    ui.collapsed = ui.collapsed.includes(id) ? ui.collapsed.filter(x => x !== id) : [...ui.collapsed, id];
+    treeAnchor = "n:" + id;
+    saveUI(); renderTree();
+  });
+})();
+
+function renderFocusBar() {
+  const fb = document.getElementById("focusBar");
+  const f = focusRef();
+  fb.hidden = !f || panelOpen;
+  if (!f || panelOpen) return;
+  const crumbs = ancestors(f.n.id).map(a => `<button class="crumb" data-fgo="${a.id}">${esc(a.name)}</button>`);
+  if (f.t) crumbs.push(`<button class="crumb" data-fgo="t:${f.t.id}" title="Subtask">${esc(f.t.text)}</button>`);
+  fb.innerHTML = crumbs.join(`<span class="sep">/</span>`) +
+    `<button class="btn small" id="fOpen">Details</button><button class="btn small ghost" id="fClear">Clear highlight</button>`;
+  fb.querySelectorAll("[data-fgo]").forEach(b => b.onclick = () => setFocus(b.dataset.fgo));
+  fb.querySelector("#fOpen").onclick = () => openPanel(f.n.id);
+  fb.querySelector("#fClear").onclick = clearFocus;
+}
+
+function setFocus(id, opts = {}) {
+  const r = focusRef(id);
+  if (!r) return;
+  const cur = focusRef();
+  treeAnchor = prevPos && prevPos.has(r.key) ? r.key : (cur ? cur.key : null);
+  ui.focus = id;
+  const parent = r.t ? r.n.id : r.n.parentId;
+  if (parent) (ui.lastChild = ui.lastChild || {})[parent] = id;
+  // Expand everything above the highlight (for a subtask, that includes its own project)
+  const chain = ancestors(r.n.id).map(a => a.id);
+  const hidden = (r.t ? chain : chain.slice(0, -1)).filter(a => ui.collapsed.includes(a));
+  if (hidden.length) ui.collapsed = ui.collapsed.filter(x => !hidden.includes(x));
+  saveUI();
+  if (opts.open || panelOpen) { ui.selected = r.n.id; panelOpen = true; tagEditTask = null; renderPanel(); }
+  if (ui.view === "tree") renderTree();
+}
+function clearFocus() { const r = focusRef(); treeAnchor = r ? r.key : null; ui.focus = null; saveUI(); if (ui.view === "tree") renderTree(); }
+// Shared by the Escape key and Left on a top-level group
+function escapeTree() {
+  if (panelOpen) closePanel();
+  else if (ui.focus && ui.view === "tree") clearFocus();
+}
+
+function navTree(key) {
+  if (!lastLayout) return;
+  const vis = lastLayout.filter(v => v.type !== "root");
+  if (!vis.length) return;
+  const r = focusRef();
+  const cur = r && vis.find(v => v.key === r.key);
+  if (!cur) { setFocus(focusIdOf(vis[0])); return; }
+  if (key === "ArrowUp" || key === "ArrowDown") {
+    // Projects move among projects at the same depth; subtasks among their sibling subtasks
+    const same = cur.type === "task"
+      ? vis.filter(v => v.type === "task" && v.n.id === cur.n.id)
+      : vis.filter(v => v.type === "node" && v.depth === cur.depth);
+    const i = same.indexOf(cur) + (key === "ArrowDown" ? 1 : -1);
+    if (same[i]) setFocus(focusIdOf(same[i]));
+  } else if (key === "ArrowLeft") {
+    if (cur.type === "task") setFocus(cur.n.id);
+    else if (cur.n.parentId) setFocus(cur.n.parentId);
+    else escapeTree();
+  } else if (key === "ArrowRight") {
+    if (cur.type === "task") return;
+    // Into child projects; a lowest-level project steps into its subtasks
+    let ch = kids(cur.n.id).map(c => c.id);
+    if (!ch.length) {
+      const fa = filtersActive();
+      ch = shownTasks(cur.n, fa, t => matches({ task: t, node: cur.n, tags: effectiveTags(t, cur.n) })).map(t => "t:" + t.id);
+    }
+    if (!ch.length) return;
+    if (cur.collapsed) ui.collapsed = ui.collapsed.filter(x => x !== cur.n.id);
+    const remembered = (ui.lastChild || {})[cur.n.id];
+    setFocus(ch.includes(remembered) ? remembered : ch[0]);
+  } else if (key === "Enter") {
+    if (panelOpen && ui.selected === cur.n.id) closePanel(); else openPanel(cur.n.id);
+  }
+}
+
+function applyView() { document.getElementById("treeG").setAttribute("transform", `translate(${view.x},${view.y}) scale(${view.k})`); }
+const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let viewAnim = null;
+function animateView(to) {
+  cancelAnimationFrame(viewAnim);
+  if (reduceMotion()) { Object.assign(view, to); applyView(); return; }
+  const from = { ...view }, t0 = performance.now(), D = 240;
+  const step = t => {
+    const p = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - p, 3);
+    view.x = from.x + (to.x - from.x) * e; view.y = from.y + (to.y - from.y) * e;
+    applyView();
+    if (p < 1) viewAnim = requestAnimationFrame(step);
+  };
+  viewAnim = requestAnimationFrame(step);
+  setTimeout(() => { if (view.x !== to.x || view.y !== to.y) { cancelAnimationFrame(viewAnim); view.x = to.x; view.y = to.y; applyView(); } }, D + 60);
+}
+function ensureVisible(id) {
+  const r = focusRef(id);
+  const v = r && lastLayout && lastLayout.find(x => x.key === r.key);
+  if (!v) return;
+  const wrap = document.getElementById("treeWrap");
+  const W = wrap.clientWidth, H = wrap.clientHeight, k = view.k, s = v.s;
+  const isLeaf = !v.children.length;
+  const lw = v.type === "task" ? textW(v.t.text, "12px Inter, sans-serif") + 40
+    : isLeaf ? textW(v.n.name, "13px Inter, sans-serif") + 90 : textW(v.n.name, "650 14.5px Fraunces, serif") + 24;
+  const lx1 = Math.min(isLeaf ? v.x - 16 * s : v.x - lw * s, v.depth === 1 ? -110 : Infinity), lx2 = isLeaf ? v.x + lw * s : v.x + 16 * s;
+  const x1 = view.x + lx1 * k, x2 = view.x + lx2 * k;
+  const y1 = view.y + (v.y - 30 * s) * k, y2 = view.y + (v.y + 24 * s) * k;
+  const top = panelOpen ? 16 : 52;
+  let nx = view.x, ny = view.y;
+  if (x1 < 16) nx += 16 - x1 + 40; else if (x2 > W - 16) nx -= Math.min(x2 - (W - 16) + 40, x1 - 16);
+  if (y1 < top) ny += top - y1 + 60; else if (y2 > H - 56) ny -= y2 - (H - 56) + 60;
+  if (nx !== view.x || ny !== view.y) animateView({ x: nx, y: ny });
+}
+function fitTree() {
+  if (!lastLayout || !lastLayout.length) return;
+  const wrap = document.getElementById("treeWrap");
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  if (!W || !H) return;
+  const xs = lastLayout.map(v => v.x), ys = lastLayout.map(v => v.y);
+  const minX = Math.min(...xs) - 140, maxX = Math.max(...xs) + 280, minY = Math.min(...ys) - 40, maxY = Math.max(...ys) + 40;
+  const k = Math.max(0.35, Math.min(1.4, W / (maxX - minX), H / (maxY - minY)));
+  view.k = k; view.x = (W - (maxX - minX) * k) / 2 - minX * k; view.y = (H - (maxY - minY) * k) / 2 - minY * k;
+  applyView();
+}
+(function setupPanZoom() {
+  const wrap = document.getElementById("treeWrap");
+  let drag = null;
+  wrap.addEventListener("pointerdown", e => { if (e.target.closest(".node")) return; cancelAnimationFrame(viewAnim); drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false }; wrap.classList.add("dragging"); wrap.setPointerCapture(e.pointerId); });
+  wrap.addEventListener("pointermove", e => {
+    if (!drag) return;
+    if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 4) drag.moved = true;
+    view.x = drag.vx + e.clientX - drag.x; view.y = drag.vy + e.clientY - drag.y; applyView();
+  });
+  wrap.addEventListener("pointerup", () => {
+    if (drag && !drag.moved && ui.focus && !panelOpen) clearFocus();
+    drag = null; wrap.classList.remove("dragging");
+  });
+  wrap.addEventListener("pointercancel", () => { drag = null; wrap.classList.remove("dragging"); });
+  wrap.addEventListener("wheel", e => {
+    e.preventDefault();
+    cancelAnimationFrame(viewAnim);
+    const rect = wrap.getBoundingClientRect(), mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const k2 = Math.max(0.25, Math.min(3, view.k * Math.exp(-e.deltaY * 0.0015)));
+    view.x = mx - (mx - view.x) * (k2 / view.k); view.y = my - (my - view.y) * (k2 / view.k); view.k = k2;
+    applyView();
+  }, { passive: false });
+})();
+
+function findTask(id) { for (const n of DB.nodes) { const t = (n.tasks || []).find(t => t.id === id); if (t) return { t, n }; } return null; }
+function bindTaskChecks(root) {
+  root.querySelectorAll("[data-done]").forEach(el => el.onchange = () => { const f = findTask(el.dataset.done); if (f) { f.t.done = el.checked; if (el.checked) f.t.doneAt = new Date().toISOString(); commit(); } });
+}
+
+/* ---------- Side panel ---------- */
+let panelOpen = false;
+let tagEditTask = null;
+function openPanel(id) {
+  if (id) { const r = focusRef(); treeAnchor = r && r.n.id === id ? r.key : "n:" + id; if (!(r && r.n.id === id)) ui.focus = id; }
+  ui.selected = id; panelOpen = true; tagEditTask = null; saveUI(); render(); }
+function closePanel() { panelOpen = false; ui.selected = null; saveUI(); render(); }
+
+function renderPanel() {
+  const p = document.getElementById("panel");
+  p.classList.toggle("open", panelOpen);
+  document.body.classList.toggle("panel-open", panelOpen);
+  if (!panelOpen) { p.innerHTML = ""; return; }
+  const id = ui.selected;
+  if (id === null || !node(id)) {
+    const tops = kids(null);
+    p.innerHTML = `<div class="pbody">
+      <div class="row" style="justify-content:space-between"><span class="crumbs">Root</span><button class="iconbtn" id="pClose" title="Close">Close</button></div>
+      <div class="pname" style="border:0">All projects</div>
+      <div><div class="section-title">Top-level groups</div><div class="children">${tops.map(t => `<a data-go="${t.id}">${esc(t.name)}</a>`).join("") || "None yet"}</div></div>
+      <div class="addrow"><input id="newChild" placeholder="New group name"><button class="btn" id="addChild">Add</button></div></div>`;
+    bindPanelCommon(p, null);
+    return;
+  }
+  const n = node(id);
+  const anc = ancestors(id);
+  const inherited = new Set(); anc.slice(0, -1).forEach(a => (a.tags || []).forEach(t => inherited.add(t)));
+  const tasks = n.tasks || [];
+  const open = tasks.filter(t => !t.done), done = tasks.filter(t => t.done);
+  const invalid = new Set([id, ...descendants(id).map(d => d.id)]);
+  const parentOpts = `<option value="">(top level)</option>` + DB.nodes.filter(x => !invalid.has(x.id))
+    .map(x => ({ x, p: pathStr(x) })).sort((a, b) => a.p.localeCompare(b.p))
+    .map(({ x, p }) => `<option value="${x.id}" ${x.id === n.parentId ? "selected" : ""}>${esc(p)}</option>`).join("");
+  const taskRow = t => {
+    const eff = effectiveTags(t, n);
+    return `<div class="task ${t.done ? "done" : ""}">
+      <input type="checkbox" data-done="${t.id}" ${t.done ? "checked" : ""}>
+      <input class="ttext" data-ttext="${t.id}" value="${esc(t.text)}">
+      <span class="tacts"><button class="iconbtn" data-ttag="${t.id}" title="Tags and attachments">${tagEditTask === t.id ? "Less" : "More"}</button><button class="iconbtn" data-tdel="${t.id}" title="Delete task">x</button></span>
+      <div class="ttags">${dueInput("task:" + t.id, t.due, t.done)}${eff.map(tid => chipHTML(tag(tid), (t.tags || []).includes(tid) ? "" : "inh")).join("")}${(t.media || []).length && tagEditTask !== t.id ? `<span class="due-chip" style="cursor:pointer" data-ttag="${t.id}">${t.media.length} attached</span>` : ""}</div>
+      ${tagEditTask === t.id
+        ? `<div class="tagedit" style="flex-direction:column;align-items:stretch">
+             <div class="section-title" style="margin:0">Tags</div>
+             <div class="taglist">${DB.tags.map(tg => `<span class="chip mini ${(t.tags || []).includes(tg.id) ? "on" : ""}" data-tt="${t.id}" data-tg="${tg.id}" style="cursor:pointer"><span class="dot" style="background:${esc(tg.color)}"></span>${esc(tg.name)}</span>`).join("")}</div>
+             <div class="section-title" style="margin:6px 0 0">Attachments</div>
+             ${mediaBlock("task:" + t.id, t.media)}</div>`
+        : ""}
+    </div>`;
+  };
+  p.innerHTML = `<div class="pbody">
+    <div class="row" style="justify-content:space-between;flex-wrap:nowrap">
+      <span class="crumbs"><a data-go="">All</a>${anc.slice(0, -1).map(a => ` / <a data-go="${a.id}">${esc(a.name)}</a>`).join("")}</span>
+      <button class="iconbtn" id="pClose" title="Close">Close</button></div>
+    <input class="pname" id="pName" value="${esc(n.name)}">
+    <div class="row"><span class="section-title" style="margin:0">Project due date</span>${dueInput("project:" + n.id, n.due, false)}${n.due ? `<button class="btn small" data-due-clear="project:${n.id}">Clear</button>` : ""}</div>
+    <div><div class="section-title">Open subtasks <span>${open.length}</span></div>
+      ${open.map(taskRow).join("") || `<div class="empty" style="padding:4px 0">No open subtasks.</div>`}
+      <div class="addrow" style="margin-top:8px"><input id="newTask" placeholder="Add a subtask"><button class="btn" id="addTask">Add</button></div>
+    </div>
+    ${done.length ? `<details><summary class="section-title" style="cursor:pointer">Completed (${done.length})</summary>${done.map(taskRow).join("")}</details>` : ""}
+    <div><div class="section-title">Project tags </div>
+      <div class="taglist">${DB.tags.map(t => {
+        const on = (n.tags || []).includes(t.id), inh = inherited.has(t.id);
+        return `<span class="chip ${on ? "on" : ""}" data-ptag="${t.id}" style="cursor:pointer;${inh && !on ? "border-style:dashed" : ""}" title="${inh ? "Inherited from a parent group" : ""}"><span class="dot" style="background:${esc(t.color)}"></span>${esc(t.name)}</span>`;
+      }).join("")}</div></div>
+    <div><div class="section-title">Attachments <span>${(n.media || []).length || ""}</span></div>${mediaBlock("project:" + n.id, n.media)}</div>
+    <div><div class="section-title">Notes</div><textarea class="notes" id="pNotes" placeholder="Notes">${esc(n.notes || "")}</textarea></div>
+    <div><div class="section-title">Sub-projects</div>
+      <div class="children">${kids(id).map(k => `<a data-go="${k.id}">${esc(k.name)}</a>`).join("") || `<span class="status">None</span>`}</div>
+      <div class="addrow"><input id="newChild" placeholder="New sub-project"><button class="btn" id="addChild">Add</button></div></div>
+    <div><div class="section-title">Move under</div><select id="pParent">${parentOpts}</select></div>
+    <div class="row"><button class="btn danger" id="pDelete">Delete project</button></div>
+  </div>`;
+  bindPanelCommon(p, id);
+  const nm = p.querySelector("#pName");
+  nm.onchange = () => { n.name = nm.value.trim() || n.name; commit(); };
+  p.querySelector("#pNotes").onchange = e => { n.notes = e.target.value; save(); };
+  const nt = p.querySelector("#newTask");
+  const addTask = () => { const v = nt.value.trim(); if (!v) return; (n.tasks = n.tasks || []).push({ id: uid("k"), text: v, done: false, tags: [] }); commit(); document.getElementById("newTask").focus(); };
+  p.querySelector("#addTask").onclick = addTask; nt.onkeydown = e => { if (e.key === "Enter") addTask(); };
+  bindTaskChecks(p);
+  bindDue(p);
+  bindMedia(p);
+  p.querySelectorAll("[data-due-clear]").forEach(el => el.onclick = () => setDue(el.dataset.dueClear, ""));
+  p.querySelectorAll("[data-ttext]").forEach(el => el.onchange = () => { const f = findTask(el.dataset.ttext); if (f && el.value.trim()) { f.t.text = el.value.trim(); commit(); } });
+  p.querySelectorAll("[data-tdel]").forEach(el => el.onclick = () => { n.tasks = n.tasks.filter(t => t.id !== el.dataset.tdel); commit(); });
+  p.querySelectorAll("[data-ttag]").forEach(el => el.onclick = () => { tagEditTask = tagEditTask === el.dataset.ttag ? null : el.dataset.ttag; renderPanel(); });
+  p.querySelectorAll("[data-tt]").forEach(el => el.onclick = () => {
+    const t = findTask(el.dataset.tt).t, g = el.dataset.tg;
+    t.tags = (t.tags || []).includes(g) ? t.tags.filter(x => x !== g) : [...(t.tags || []), g]; commit();
+  });
+  p.querySelectorAll("[data-ptag]").forEach(el => el.onclick = () => {
+    const g = el.dataset.ptag; n.tags = (n.tags || []).includes(g) ? n.tags.filter(x => x !== g) : [...(n.tags || []), g]; commit();
+  });
+  p.querySelector("#pParent").onchange = e => { n.parentId = e.target.value || null; commit(); };
+  p.querySelector("#pDelete").onclick = () => {
+    const d = descendants(id);
+    const nTasks = [n, ...d].reduce((a, x) => a + (x.tasks || []).length, 0);
+    if (!confirm(`Delete "${n.name}"${d.length ? ` and its ${d.length} sub-project(s)` : ""} with ${nTasks} subtask(s)? This cannot be undone (use Export first if unsure).`)) return;
+    const kill = new Set([id, ...d.map(x => x.id)]);
+    DB.nodes = DB.nodes.filter(x => !kill.has(x.id));
+    ui.selected = n.parentId; commit();
+  };
+}
+function bindPanelCommon(p, id) {
+  p.querySelector("#pClose").onclick = closePanel;
+  p.querySelectorAll("[data-go]").forEach(el => el.onclick = () => openPanel(el.dataset.go || null));
+  const nc = p.querySelector("#newChild");
+  const add = () => {
+    const v = nc.value.trim(); if (!v) return;
+    DB.nodes.push({ id: uid("n"), name: v, parentId: id, tags: [], notes: "", tasks: [] });
+    if (id) ui.collapsed = ui.collapsed.filter(x => x !== id);
+    commit(); document.getElementById("newChild").focus();
+  };
+  p.querySelector("#addChild").onclick = add; nc.onkeydown = e => { if (e.key === "Enter") add(); };
+}
+
+/* ---------- To-do view (day / week), tile based ---------- */
+function todoItems() {
+  const out = [];
+  DB.nodes.forEach(n => {
+    const anc = ancestors(n.id);
+    const ptags = [...new Set(anc.flatMap(a => a.tags || []))];
+    const ppath = anc.slice(0, -1).map(a => a.name).join(" / ");
+    if (matchFields(n.name, ppath, ptags, false))
+      out.push({ kind: "project", key: "project:" + n.id, text: n.name, node: n, path: ppath || "Top level", tags: ptags, due: n.due || null, done: false, obj: n });
+    (n.tasks || []).forEach(t => {
+      const tags = effectiveTags(t, n), path = pathStr(n);
+      if (matchFields(t.text, path, tags, !!t.done))
+        out.push({ kind: "task", key: "task:" + t.id, text: t.text, node: n, path, tags, due: t.due || null, done: !!t.done, obj: t });
+    });
+  });
+  return out;
+}
+function shortDue(s) {
+  const t = todayYmd();
+  if (s === t) return "Today";
+  if (s === addDays(t, 1)) return "Tomorrow";
+  if (s === addDays(t, -1)) return "Yesterday";
+  return fmtDate(s, s.slice(0, 4) === t.slice(0, 4) ? { weekday: "short", month: "short", day: "numeric" } : { month: "short", day: "numeric", year: "numeric" });
+}
+function todoTile(it, compact) {
+  const late = it.due && !it.done && it.due < todayYmd();
+  const nMedia = (it.obj.media || []).length;
+  const dots = it.tags.map(id => { const t = tag(id); return t ? `<span class="tdot" title="${esc(t.name)}" style="background:${esc(t.color)}"></span>` : ""; }).join("");
+  return `<article class="tile tile-${it.kind} ${it.done ? "done" : ""} ${late ? "late" : ""} ${compact ? "compact" : ""}" draggable="true" data-drag="${it.key}" style="--tc:${branchColor(it.node)}">
+    <div class="tile-head">
+      ${it.kind === "task" ? `<input type="checkbox" data-done="${it.obj.id}" ${it.done ? "checked" : ""} aria-label="Mark done">` : `<span class="pmark" title="Project"></span>`}
+      <button class="tile-path" data-open="${it.node.id}" title="${esc(it.path)}"><bdi>${esc(it.path)}</bdi></button>
+    </div>
+    <div class="tile-txt">${esc(it.text)}</div>
+    ${compact ? "" : `<div class="tile-foot">
+      <span class="tdots">${dots}</span>
+      ${nMedia ? `<span class="tmeta">${nMedia} attached</span>` : ""}
+      <label class="datebtn ${it.due ? "" : "unset"}" title="Change date">${it.due ? esc(shortDue(it.due)) : "Set date"}<input type="date" data-due="${it.key}" value="${it.due || ""}"></label>
+    </div>`}
+  </article>`;
+}
+function tileGrid(items, drop, opts = {}) {
+  const body = items.length ? items.map(it => todoTile(it, opts.compact)).join("") : `<div class="tile-empty">${esc(opts.empty || "Nothing here")}</div>`;
+  return `<div class="tiles dropzone ${opts.cls || ""}" data-drop="${drop}">${body}</div>`;
+}
+const byDone = (a, b) => (a.done - b.done) || (a.kind === b.kind ? 0 : a.kind === "task" ? -1 : 1);
+
+function renderTodo() {
+  const today = todayYmd();
+  if (!ui.todoDate) ui.todoDate = today;
+  const mode = ui.todoMode || "day", d = ui.todoDate;
+  const items = todoItems();
+  const overdue = items.filter(it => it.due && it.due < today && !it.done).sort((a, b) => a.due.localeCompare(b.due));
+  const unTasks = items.filter(it => !it.due && it.kind === "task" && !it.done);
+  const unProj = items.filter(it => !it.due && it.kind === "project");
+  const openSecs = ui.todoOpen || [];
+  let when, sub = "", html = "";
+  if (mode === "day") {
+    when = d === today ? "Today" : fmtDate(d, { weekday: "long" });
+    sub = fmtDate(d, { weekday: d === today ? "long" : undefined, month: "long", day: "numeric", year: d.slice(0, 4) === today.slice(0, 4) ? undefined : "numeric" });
+    const due = items.filter(it => it.due === d).sort(byDone);
+    if (d === today && overdue.length) html += `<h3 class="sec late">Overdue</h3>` + tileGrid(overdue, today);
+    if (d === today && overdue.length) html += `<h3 class="sec">Due today</h3>`;
+    html += tileGrid(due, d, { empty: "Nothing due" });
+  } else {
+    const ws = weekStart(d), we = addDays(ws, 6);
+    when = "Week of " + fmtDate(ws, { month: "long", day: "numeric" });
+    sub = fmtDate(ws, { month: "short", day: "numeric" }) + " to " + fmtDate(we, { month: "short", day: "numeric", year: "numeric" });
+    html += `<div class="week">` + [0, 1, 2, 3, 4, 5, 6].map(i => {
+      const day = addDays(ws, i), list = items.filter(it => it.due === day).sort(byDone);
+      return `<div class="wday dropzone ${day === today ? "today" : ""}" data-drop="${day}">
+        <button class="wday-h" data-goday="${day}" title="Open this day">${fmtDate(day, { weekday: "short" })} <span>${fmtDate(day, { day: "numeric" })}</span></button>
+        <div class="wbody">${list.map(it => todoTile(it, true)).join("")}</div></div>`;
+    }).join("") + `</div>`;
+    if (overdue.length) html += `<h3 class="sec late">Overdue</h3>` + tileGrid(overdue, "", { compact: true });
+  }
+  if (openSecs.includes("untasks")) html += `<h3 class="sec">Unscheduled subtasks</h3>` + tileGrid(unTasks, "", { empty: "Every open subtask has a date" });
+  if (openSecs.includes("unproj")) html += `<h3 class="sec">Unscheduled projects</h3>` + tileGrid(unProj, "", { compact: false });
+  const step = mode === "day" ? 1 : 7;
+  const tog = (key, label, n) => `<button class="btn toggle dropzone ${openSecs.includes(key) ? "on" : ""}" data-sec="${key}" data-drop="" aria-pressed="${openSecs.includes(key)}">${label}<span class="n">${n}</span></button>`;
+  const el = document.getElementById("todo");
+  el.innerHTML = `<div class="todo-bar">
+      <h2 class="when">${esc(when)}<span>${esc(sub)}</span></h2>
+      <div class="row nav">
+        <button class="btn small" data-tstep="-${step}" aria-label="Previous ${mode}">&lsaquo;</button>
+        <button class="btn small" data-tstep="0">Today</button>
+        <button class="btn small" data-tstep="${step}" aria-label="Next ${mode}">&rsaquo;</button>
+        <span class="seg"><button data-tmode="day" class="${mode === "day" ? "on" : ""}">Day</button><button data-tmode="week" class="${mode === "week" ? "on" : ""}">Week</button></span>
+      </div>
+      <div class="spacer"></div>
+      ${tog("untasks", "Unscheduled subtasks", unTasks.length)}${tog("unproj", "Unscheduled projects", unProj.length)}
+    </div>${html}`;
+  el.querySelectorAll("[data-tmode]").forEach(b => b.onclick = () => { ui.todoMode = b.dataset.tmode; saveUI(); renderTodo(); });
+  el.querySelectorAll("[data-tstep]").forEach(b => b.onclick = () => { const s = +b.dataset.tstep; ui.todoDate = s ? addDays(ui.todoDate, s) : todayYmd(); saveUI(); renderTodo(); });
+  el.querySelectorAll("[data-goday]").forEach(h => h.onclick = () => { ui.todoDate = h.dataset.goday; ui.todoMode = "day"; saveUI(); renderTodo(); });
+  el.querySelectorAll("[data-sec]").forEach(b => b.onclick = () => {
+    const set = new Set(ui.todoOpen || []), s = b.dataset.sec;
+    set.has(s) ? set.delete(s) : set.add(s);
+    ui.todoOpen = [...set]; saveUI(); renderTodo();
+  });
+  el.querySelectorAll("[data-open]").forEach(p => p.onclick = e => { e.stopPropagation(); openPanel(p.dataset.open); });
+  bindTaskChecks(el); bindDue(el);
+  el.querySelectorAll(".datebtn input").forEach(inp => inp.addEventListener("click", e => { e.stopPropagation(); try { inp.showPicker(); } catch (err) {} }));
+  // Drag and drop
+  el.querySelectorAll("[data-drag]").forEach(r => {
+    r.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", r.dataset.drag); e.dataTransfer.effectAllowed = "move"; r.classList.add("dragging"); });
+    r.addEventListener("dragend", () => r.classList.remove("dragging"));
+  });
+  el.querySelectorAll(".dropzone").forEach(z => {
+    z.addEventListener("dragover", e => { if (e.dataTransfer.types.includes("text/plain")) { e.preventDefault(); z.classList.add("over"); } });
+    z.addEventListener("dragleave", e => { if (!z.contains(e.relatedTarget)) z.classList.remove("over"); });
+    z.addEventListener("drop", e => {
+      e.preventDefault(); e.stopPropagation(); z.classList.remove("over");
+      const key = e.dataTransfer.getData("text/plain"); if (key && objByKey(key)) setDue(key, z.dataset.drop);
+    });
+  });
+}
+
+/* ---------- Media attachments ---------- */
+let rec = null; // { mr, key, start }
+function mediaKind(type, name) {
+  if (/^image\//.test(type)) return "image";
+  if (/^video\//.test(type)) return "video";
+  if (/^audio\//.test(type)) return "audio";
+  if (/\.(jpe?g|png|gif|webp|heic|bmp|svg)$/i.test(name)) return "image";
+  if (/\.(mp4|mov|webm|mkv|avi|m4v)$/i.test(name)) return "video";
+  if (/\.(mp3|wav|m4a|ogg|aac|flac|opus)$/i.test(name)) return "audio";
+  return "doc";
+}
+const extOf = name => ((name.match(/\.([A-Za-z0-9]{1,5})$/) || [])[1] || "FILE").toUpperCase();
+function safeUrl(u) { return /^(https?:\/\/|media\/)/i.test(u) ? u : "#"; }
+function mediaTile(m, key) {
+  const del = `<button class="mdel" data-mdel="${key}|${m.id}" title="Remove">x</button>`;
+  const u = esc(safeUrl(m.url)), nm = esc(m.name || "");
+  if (m.kind === "image") return `<div class="mtile">${del}<img src="${u}" alt="${nm}" loading="lazy" data-mview="${key}|${m.id}"><span class="cap">${nm}</span></div>`;
+  if (m.kind === "video") return `<div class="mtile">${del}<video src="${u}#t=0.5" preload="metadata" muted data-mview="${key}|${m.id}"></video><span class="cap">Video: ${nm}</span></div>`;
+  if (m.kind === "audio") return `<div class="mtile wide">${del}<span class="nm">${nm}</span><audio controls preload="none" src="${u}"></audio></div>`;
+  if (m.kind === "link") { let host = ""; try { host = new URL(m.url).hostname.replace(/^www\./, ""); } catch (e) {} return `<a class="mtile" href="${u}" target="_blank" rel="noopener noreferrer">${del}<span class="ext">LINK</span><span class="nm">${esc(m.name || host)}</span></a>`; }
+  return `<a class="mtile" href="${u}" target="_blank" rel="noopener">${del}<span class="ext">${esc(extOf(m.name || ""))}</span><span class="nm">${nm}</span></a>`;
+}
+function mediaBlock(key, list) {
+  list = list || [];
+  const recording = rec && rec.key === key;
+  return `<div class="media" data-mkey="${key}">
+    <div class="mgrid">${list.map(m => mediaTile(m, key)).join("")}</div>
+    <div class="row madd">
+      <button class="btn small" data-mfile="${key}" ${serverMode ? "" : "disabled"}>Add files</button>
+      <button class="btn small ${recording ? "rec" : ""}" data-mrec="${key}" ${serverMode ? "" : "disabled"}>${recording ? "Stop recording" : "Record audio"}</button>
+    </div>
+    <div class="row madd" style="margin-top:6px"><input data-mlinkin="${key}" placeholder="Paste a link"><button class="btn small" data-mlink="${key}">Add link</button></div>
+  </div>`;
+}
+function addMedia(key, item) {
+  const o = objByKey(key); if (!o) return;
+  (o.media = o.media || []).push(Object.assign({ id: uid("m"), addedAt: new Date().toISOString() }, item));
+}
+async function uploadFiles(key, files) {
+  if (!serverMode) { alert("Start the app with Open Project Menu.bat to attach files."); return; }
+  for (const f of files) {
+    setStatus(`Uploading ${f.name}...`);
+    try {
+      const r = await fetch("api/upload?name=" + encodeURIComponent(f.name), { method: "POST", headers: { "Content-Type": f.type || "application/octet-stream" }, body: f });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const res = await r.json();
+      addMedia(key, { kind: mediaKind(f.type, f.name), name: f.name, url: res.url, size: f.size, type: f.type });
+      commit();
+    } catch (e) { setStatus("Upload failed: " + f.name); alert(`Could not upload ${f.name}: ${e.message}`); return; }
+  }
+  setStatus("Saved");
+}
+let pendingMediaKey = null;
+document.getElementById("mediaFile").onchange = e => { const files = [...e.target.files]; e.target.value = ""; if (pendingMediaKey && files.length) uploadFiles(pendingMediaKey, files); };
+async function toggleRecord(key) {
+  if (rec) { rec.mr.stop(); return; }
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { alert("Microphone not available: " + e.message); return; }
+  const mr = new MediaRecorder(stream), chunks = [];
+  mr.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  mr.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
+    const type = mr.mimeType || "audio/webm";
+    const ext = type.includes("ogg") ? "ogg" : type.includes("mp4") ? "m4a" : "webm";
+    const now = new Date(), k = rec.key;
+    rec = null;
+    const file = new File(chunks, `Recording ${ymd(now)} ${pad2(now.getHours())}${pad2(now.getMinutes())}.${ext}`, { type });
+    renderPanel();
+    await uploadFiles(k, [file]);
+  };
+  mr.start();
+  rec = { mr, key, start: Date.now() };
+  renderPanel();
+}
+setInterval(() => {
+  if (!rec) return;
+  const s = Math.floor((Date.now() - rec.start) / 1000);
+  document.querySelectorAll(`[data-mrec]`).forEach(b => { if (b.dataset.mrec === rec.key) b.textContent = `Stop recording (${Math.floor(s / 60)}:${pad2(s % 60)})`; });
+}, 500);
+function findMedia(ref) { const [key, id] = ref.split("|"); const o = objByKey(key); return o ? { o, m: (o.media || []).find(m => m.id === id) } : {}; }
+function bindMedia(root) {
+  root.querySelectorAll("[data-mfile]").forEach(b => b.onclick = () => { pendingMediaKey = b.dataset.mfile; document.getElementById("mediaFile").click(); });
+  root.querySelectorAll("[data-mrec]").forEach(b => b.onclick = () => toggleRecord(b.dataset.mrec));
+  root.querySelectorAll("[data-mlink]").forEach(b => {
+    const key = b.dataset.mlink, inp = root.querySelector(`[data-mlinkin="${CSS.escape(key)}"]`);
+    const add = () => {
+      let v = inp.value.trim(); if (!v) return;
+      if (!/^https?:\/\//i.test(v)) v = "https://" + v;
+      try { new URL(v); } catch (e) { alert("That does not look like a link."); return; }
+      addMedia(key, { kind: "link", url: v, name: "" }); commit();
+    };
+    b.onclick = add; inp.onkeydown = e => { if (e.key === "Enter") add(); };
+  });
+  root.querySelectorAll("[data-mdel]").forEach(b => b.onclick = async e => {
+    e.preventDefault(); e.stopPropagation();
+    const { o, m } = findMedia(b.dataset.mdel); if (!m) return;
+    const isFile = /^media\//.test(m.url);
+    if (!confirm(`Remove "${m.name || m.url}"?${isFile ? " The file is moved to the media/.trash folder, not permanently deleted." : ""}`)) return;
+    o.media = o.media.filter(x => x.id !== m.id); commit();
+    if (isFile && serverMode) { try { await fetch("api/media?name=" + encodeURIComponent(m.url.slice(6)), { method: "DELETE" }); } catch (err) {} }
+  });
+  root.querySelectorAll("[data-mview]").forEach(v => v.onclick = () => {
+    const { m } = findMedia(v.dataset.mview); if (!m) return;
+    const u = esc(safeUrl(m.url));
+    openModal(`<div class="lightbox">${m.kind === "image" ? `<img src="${u}" alt="${esc(m.name)}">` : `<video src="${u}" controls autoplay></video>`}</div>
+      <div class="row" style="justify-content:space-between;margin-top:10px"><span class="status">${esc(m.name)}</span>
+      <span class="row"><a class="btn small" href="${u}" target="_blank" rel="noopener" style="text-decoration:none">Open original</a><button class="btn small" id="mDone">Close</button></span></div>`,
+      md => md.querySelector("#mDone").onclick = closeModal, true);
+  });
+  root.querySelectorAll(".media").forEach(z => {
+    z.addEventListener("dragover", e => { if (e.dataTransfer.types.includes("Files")) { e.preventDefault(); z.classList.add("over"); } });
+    z.addEventListener("dragleave", e => { if (!z.contains(e.relatedTarget)) z.classList.remove("over"); });
+    z.addEventListener("drop", e => { if (!e.dataTransfer.files.length) return; e.preventDefault(); z.classList.remove("over"); uploadFiles(z.dataset.mkey, [...e.dataTransfer.files]); });
+  });
+}
+
+/* ---------- Modals ---------- */
+function openModal(html, bind, wide) {
+  const bg = document.getElementById("modalBg"), m = document.getElementById("modal");
+  m.className = "modal" + (wide ? " wide" : "");
+  m.innerHTML = html; bg.classList.add("open"); bind && bind(m);
+}
+function closeModal() {
+  const m = document.getElementById("modal");
+  m.querySelectorAll("video,audio").forEach(v => v.pause());
+  document.getElementById("modalBg").classList.remove("open");
+}
+document.getElementById("modalBg").addEventListener("click", e => { if (e.target.id === "modalBg") closeModal(); });
+document.addEventListener("keydown", e => {
+  const modalOpen = document.getElementById("modalBg").classList.contains("open");
+  if (e.key === "Escape") {
+    if (modalOpen) closeModal();
+    else if (anyPopOpen()) document.querySelectorAll(".pop").forEach(p => { p.hidden = true; p.previousElementSibling?.setAttribute("aria-expanded", "false"); });
+    else escapeTree();
+    return;
+  }
+  if (modalOpen || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+  if (e.key === "/") { e.preventDefault(); document.getElementById("search").focus(); return; }
+  if (e.key === "?") { e.preventDefault(); openHelp(); return; }
+  if (ui.view !== "tree" || anyPopOpen()) return;
+  if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(e.key)) return;
+  if (e.key === "Enter" && e.target.closest && e.target.closest("button, a")) return;
+  e.preventDefault();
+  navTree(e.key);
+});
+
+function openHelp() {
+  openModal(`<h2>How Project Menu works</h2><div class="help">
+    <h3>Tree</h3><ul>
+      <li>Click a project to highlight its branch and open its details. The highlighted branch grows and the rest shrinks.</li>
+      <li><kbd>&uarr;</kbd><kbd>&darr;</kbd> jump to the neighboring branch at the same level.</li>
+      <li><kbd>&larr;</kbd><kbd>&rarr;</kbd> move shallower or deeper along the branch. <kbd>&rarr;</kbd> on a lowest-level project steps into its subtasks; <kbd>&larr;</kbd> on a top-level group clears the highlight.</li>
+      <li><b>Align tips</b> lines up the ends of all visible branches in one column.</li>
+      <li><kbd>Enter</kbd> opens or closes details. <kbd>Esc</kbd> closes details, then clears the highlight.</li>
+      <li>Double-click a project to collapse or expand it. Scroll to zoom, drag to pan.</li>
+      <li>Circle size shows how many open subtasks sit below a project.</li></ul>
+    <h3>Tags and filters</h3><ul>
+      <li>Tags on a project or group apply to every subtask below it. Dashed tags are inherited.</li>
+      <li><b>Filter</b> narrows the tree, the to-do list and <b>Pick something</b> to matching tasks.</li>
+      <li><kbd>/</kbd> jumps to search. <kbd>?</kbd> opens this help.</li></ul>
+    <h3>To-do</h3><ul>
+      <li>Drag tiles between days, or onto an <b>Unscheduled</b> button to clear the date.</li>
+      <li>Click the date on a tile to change it. Click the path above a task to open its project.</li></ul>
+    <h3>Attachments</h3><ul>
+      <li>Add photos, videos, audio recordings, files or links to any project or subtask. You can drop files onto the attachments area.</li>
+      <li>Files need the app to be started with <b>Open Project Menu.bat</b>. Links work either way.</li></ul>
+    <h3>Saving</h3><ul>
+      <li>Changes save to projects.json automatically, with a daily backup in the backups folder. Use <b>More</b> to export or import a backup.</li></ul>
+  </div><div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn primary" id="mDone">Done</button></div>`, m => m.querySelector("#mDone").onclick = closeModal);
+}
+
+function tagManager() {
+  const used = id => allTasks().filter(it => (it.task.tags || []).includes(id)).length + DB.nodes.filter(n => (n.tags || []).includes(id)).length;
+  openModal(`<h2>Tags</h2>
+    ${DB.tags.map(t => `<div class="tagrow"><input type="color" value="${esc(t.color)}" data-tc="${t.id}"><input type="text" value="${esc(t.name)}" data-tn="${t.id}"><span class="status">${used(t.id)} uses</span><button class="iconbtn" data-tx="${t.id}" title="Delete tag">x</button></div>`).join("")}
+    <div class="addrow" style="margin-top:12px"><input id="newTag" placeholder="New tag"><button class="btn" id="addTag">Add</button></div>
+    <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn primary" id="mDone">Done</button></div>`, m => {
+    m.querySelectorAll("[data-tc]").forEach(el => el.onchange = () => { tag(el.dataset.tc).color = el.value; commit(); });
+    m.querySelectorAll("[data-tn]").forEach(el => el.onchange = () => { if (el.value.trim()) { tag(el.dataset.tn).name = el.value.trim(); commit(); } });
+    m.querySelectorAll("[data-tx]").forEach(el => el.onclick = () => {
+      const id = el.dataset.tx; if (!confirm(`Delete tag "${tag(id).name}"? It will be removed from all projects and tasks.`)) return;
+      DB.tags = DB.tags.filter(t => t.id !== id);
+      DB.nodes.forEach(n => { n.tags = (n.tags || []).filter(x => x !== id); (n.tasks || []).forEach(t => t.tags = (t.tags || []).filter(x => x !== id)); });
+      ui.filterTags = ui.filterTags.filter(x => x !== id); commit(); tagManager();
+    });
+    const nt = m.querySelector("#newTag");
+    const add = () => { const v = nt.value.trim(); if (!v) return; DB.tags.push({ id: uid("t"), name: v, color: BRANCH[DB.tags.length % BRANCH.length] }); commit(); tagManager(); document.getElementById("newTag").focus(); };
+    m.querySelector("#addTag").onclick = add; nt.onkeydown = e => { if (e.key === "Enter") add(); };
+    m.querySelector("#mDone").onclick = closeModal;
+  });
+}
+
+function pickSomething() {
+  const pool = allTasks().filter(it => !it.task.done && matches(it));
+  const desc = ui.filterTags.length ? ` matching ${ui.filterTags.map(id => tag(id)?.name).filter(Boolean).join(ui.filterMode === "all" ? " + " : " or ")}` : "";
+  if (!pool.length) { openModal(`<h2>Nothing to pick</h2><p>No open subtasks${desc}. Try clearing a filter.</p><div class="row" style="justify-content:flex-end"><button class="btn" id="mDone">OK</button></div>`, m => m.querySelector("#mDone").onclick = closeModal); return; }
+  const it = pool[Math.floor(Math.random() * pool.length)];
+  openModal(`<h2>How about this?</h2>
+    <div class="pick"><div>${esc(it.task.text)}</div><div class="path">${esc(pathStr(it.node))}</div><div class="row" style="margin-top:8px">${it.tags.map(id => chipHTML(tag(id))).join("")}</div></div>
+    <p class="status">Picked from ${pool.length} open subtask(s)${desc}.</p>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn" id="mAgain">Another</button><button class="btn" id="mOpen">Open project</button><button class="btn primary" id="mDoneTask">Mark done</button></div>`, m => {
+    m.querySelector("#mAgain").onclick = pickSomething;
+    m.querySelector("#mOpen").onclick = () => { closeModal(); openPanel(it.node.id); };
+    m.querySelector("#mDoneTask").onclick = () => { it.task.done = true; it.task.doneAt = new Date().toISOString(); closeModal(); commit(); };
+  });
+}
+
+/* ---------- Export / import ---------- */
+document.getElementById("btnExport").onclick = () => {
+  const blob = new Blob([JSON.stringify(DB, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = `project-menu-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("btnImport").onclick = () => document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!Array.isArray(d.nodes) || !Array.isArray(d.tags)) throw new Error("missing nodes/tags");
+    if (!confirm("Replace all current projects with the imported file?")) return;
+    DB = d; ui.selected = null; panelOpen = false; commit(); fitTree();
+  } catch (err) { alert("Could not import: " + err.message); }
+  e.target.value = "";
+};
+
+/* ---------- Wiring ---------- */
+function setView(v) {
+  if (v !== "todo") v = "tree";
+  ui.view = v; saveUI();
+  document.getElementById("tabTree").classList.toggle("on", v === "tree");
+  document.getElementById("tabTodo").classList.toggle("on", v === "todo");
+  document.getElementById("viewTree").classList.toggle("on", v === "tree");
+  document.getElementById("viewTodo").classList.toggle("on", v === "todo");
+  renderViews();
+  if (v === "tree") requestAnimationFrame(fitTree);
+}
+function renderViews() { if (ui.view === "todo") renderTodo(); else renderTree(); }
+function render() { renderFilterbar(); renderViews(); renderPanel(); }
+
+document.getElementById("tabTree").onclick = () => setView("tree");
+document.getElementById("tabTodo").onclick = () => setView("todo");
+document.getElementById("btnTags").onclick = tagManager;
+document.getElementById("btnPick").onclick = pickSomething;
+document.getElementById("btnFit").onclick = fitTree;
+document.getElementById("btnShowTasks").onclick = () => { ui.showTasks = !ui.showTasks; saveUI(); needFit = true; renderTree(); };
+document.getElementById("btnAlignTips").onclick = () => { ui.alignTips = !ui.alignTips; saveUI(); needFit = true; renderTree(); };
+document.getElementById("btnExpandAll").onclick =() => { ui.collapsed = []; saveUI(); needFit = true; renderTree(); };
+document.getElementById("btnAddTop").onclick = () => openPanel(null);
+document.getElementById("btnHelp").onclick = openHelp;
+document.getElementById("btnFilter").onclick = () => togglePop("filterPop");
+document.getElementById("btnMore").onclick = () => togglePop("morePop");
+document.querySelectorAll("#morePop .menuitem").forEach(b => b.addEventListener("click", () => togglePop("morePop", false)));
+let resizeTimer = null;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (ui.view === "tree") fitTree(); }, 80); });
+if (document.fonts) document.fonts.ready.then(() => { needFit = true; if (DB && ui.view === "tree") renderTree(); });
+
+load().then(() => { panelOpen = false; ui.selected = null; ui.todoDate = todayYmd(); render(); setView(ui.view); });
+</script>
+</body>
+</html>

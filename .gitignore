@@ -1,0 +1,11 @@
+# Personal data - kept local, never committed
+projects.json
+media/
+backups/
+
+# Python / OS clutter
+__pycache__/
+*.pyc
+Thumbs.db
+desktop.ini
+nul
