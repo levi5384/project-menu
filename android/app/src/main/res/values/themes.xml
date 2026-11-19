@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Light variant; values-night overrides it. WebView (API 33+) follows isLightTheme,
+         so the page's prefers-color-scheme media query tracks the system theme. -->
+    <style name="Theme.ProjectMenu" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/page_bg</item>
+        <item name="android:colorAccent">#2F5D46</item>
+        <item name="android:colorPrimary">#2F5D46</item>
+    </style>
+</resources>

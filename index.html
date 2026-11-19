@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Project Menu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -85,6 +85,8 @@ a.btn { color: var(--ink); }
 button.chip { cursor: pointer; }
 .chip .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip.on.not { background: var(--surface); color: var(--ink); border-color: var(--ink); }
+.pop .chip.on.not { text-decoration: line-through; }
 .chip .x { opacity: .7; margin-left: 1px; }
 .chip.mini { padding: 1px 7px; font-size: 11px; }
 .chip.inh { border-style: dashed; opacity: .75; }
@@ -100,7 +102,9 @@ main { flex: 1; display: flex; min-height: 0; position: relative; }
 /* Tree */
 #treeWrap { position: absolute; inset: 0; overflow: hidden; cursor: grab; touch-action: none; }
 #treeWrap.dragging { cursor: grabbing; }
-#treeSvg { width: 100%; height: 100%; display: block; }
+#treeSvg { width: 100%; height: 100%; display: block; overflow: visible; transform-origin: 0 0; }
+/* While panning, the whole SVG becomes a GPU layer that is moved without repainting the tree */
+#treeWrap.panning #treeSvg { will-change: transform; }
 .link { fill: none; stroke: var(--branch); stroke-width: 1.6; }
 .node circle { stroke: var(--surface); stroke-width: 2; cursor: pointer; }
 .node text { fill: var(--ink); font-size: 13px; cursor: pointer; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
@@ -257,6 +261,86 @@ input.due.late { color: var(--danger); border-color: var(--danger); }
   .wday { min-height: 64px; }
   .todo-bar .when { font-size: 22px; flex-wrap: wrap; column-gap: 10px; }
 }
+
+/* ---------- Touch and small screens ---------- */
+header { padding-top: max(8px, env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+.treeControls { bottom: calc(14px + env(safe-area-inset-bottom)); left: max(16px, env(safe-area-inset-left)); }
+.treeControls .zbtn { min-width: 30px; font-weight: 600; }
+.treeControls .vsep { width: 1px; background: var(--line); margin: 3px 2px; flex: none; }
+#treeWrap { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.node .hit { fill: transparent; stroke: none !important; }
+#todo { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+.pbody { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+.modal-bg { padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+/* Floating copy of a tile while it is dragged by touch */
+.tile-ghost { position: fixed; z-index: 50; pointer-events: none; margin: 0; opacity: .92; box-shadow: var(--shadow); transform: rotate(-1.5deg) scale(1.03); cursor: grabbing; }
+.tile.lifting { transform: scale(.97); transition: transform .15s; }
+body.touch-dragging, body.touch-dragging * { -webkit-user-select: none; user-select: none; }
+
+@media (hover: none) {
+  .tile { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+}
+@media (pointer: coarse) {
+  body { -webkit-tap-highlight-color: transparent; }
+  .btn { min-height: 40px; padding: 8px 14px; }
+  .btn.small { min-height: 38px; padding: 6px 12px; font-size: 13px; }
+  .tabs button { min-height: 40px; padding: 8px 14px; }
+  .menuitem { min-height: 44px; padding: 10px 14px; }
+  .pop.right { width: 220px; }
+  .seg button { min-height: 38px; padding: 6px 14px; font-size: 13px; }
+  .iconbtn { min-width: 40px; min-height: 40px; padding: 0 8px; }
+  .chip { min-height: 34px; padding: 5px 12px; }
+  .chip.mini { min-height: 0; }
+  .taglist .chip.mini[data-tt] { min-height: 34px; padding: 5px 11px; font-size: 12.5px; }
+  .focusbar .crumb { min-height: 36px; padding: 6px 10px; }
+  input[type=checkbox] { width: 22px; height: 22px; }
+  label.check { min-height: 40px; }
+  input, select, textarea, .search, input.due, .madd input { font-size: 16px; }
+  .search, .addrow input, select, .tagrow input[type=text] { min-height: 40px; }
+  input.due { min-height: 34px; }
+  .datebtn { padding: 7px 12px; font-size: 13px; }
+  .tile-path { padding: 6px 0; font-size: 12.5px; }
+  .wday-h { min-height: 44px; }
+  .mtile .mdel { font-size: 13px; padding: 4px 9px; line-height: 20px; }
+  .crumbs a { display: inline-block; padding: 6px 2px; }
+  .children a { padding: 6px 0; }
+  .tagrow input[type=color] { width: 44px; height: 40px; }
+  .treeControls { padding: 4px; gap: 4px; }
+  .treeControls .zbtn { min-width: 40px; font-size: 18px; }
+  .task { padding: 9px 0; align-items: center; }
+}
+@media (max-width: 760px) {
+  header { gap: 6px; padding-bottom: 6px; padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+  .brand { display: none; }
+  .tabs { margin-right: 0; }
+  /* Two rows: views, filter and pick; then search, help and more */
+  .search { order: 10; flex: 1 1 140px; min-width: 0; }
+  #btnHelp { order: 11; }
+  #moreWrap { order: 12; }
+  .activeChips { order: 13; flex: 1 1 100%; }
+  .activeChips:empty { display: none; }
+  .status { order: 14; flex: 1 1 100%; }
+  #btnPick .mid { display: none; }
+  .tabs button { padding-left: 12px; padding-right: 12px; }
+  #status:empty { display: none; }
+  /* Tree toolbar scrolls sideways instead of overflowing */
+  .treeControls { right: max(12px, env(safe-area-inset-right)); left: max(12px, env(safe-area-inset-left)); overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
+  .treeControls::-webkit-scrollbar { display: none; }
+  .treeControls .btn { flex: none; }
+  .focusbar { left: 12px; right: 12px; top: 10px; }
+  /* Details become a full-screen sheet with a sticky close bar */
+  #panel.open { position: fixed; inset: 0; width: 100%; max-width: none; z-index: 25; border-left: 0; padding-top: env(safe-area-inset-top); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  #panel .pbody > .row:first-child { position: sticky; top: 0; z-index: 2; background: var(--surface); margin: -16px -16px 0; padding: 8px 12px 8px 16px; border-bottom: 1px solid var(--line); }
+  #panel #pClose { border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-weight: 600; padding: 4px 14px; }
+  .modal-bg { padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
+  .modal, .modal.wide { width: 100%; max-height: 100%; padding: 16px; }
+  .modal .row { row-gap: 8px; }
+  #todo { padding: 12px 12px calc(24px + env(safe-area-inset-bottom)); }
+  .todo-bar { gap: 10px; }
+  .todo-bar > .spacer { display: none; }
+  .tiles { grid-template-columns: 1fr; }
+  .tagrow { flex-wrap: wrap; }
+}
 </style>
 </head>
 <body>
@@ -274,9 +358,9 @@ input.due.late { color: var(--danger); border-color: var(--danger); }
   <div class="activeChips" id="activeChips"></div>
   <div class="spacer"></div>
   <span class="status" id="status"></span>
-  <button class="btn primary" id="btnPick">Pick something<span class="long"> for me</span></button>
+  <button class="btn primary" id="btnPick">Pick<span class="mid"> something</span><span class="long"> for me</span></button>
   <button class="btn ghost" id="btnHelp">Help</button>
-  <div class="popwrap">
+  <div class="popwrap" id="moreWrap">
     <button class="btn ghost" id="btnMore" aria-haspopup="true" aria-expanded="false">More</button>
     <div class="pop right" id="morePop" hidden>
       <button class="menuitem" id="btnTags">Manage tags</button>
@@ -292,7 +376,10 @@ input.due.late { color: var(--danger); border-color: var(--danger); }
     <div id="treeWrap"><svg id="treeSvg" role="tree" aria-label="Project tree"><g id="treeG"></g></svg></div>
     <div class="focusbar" id="focusBar" hidden></div>
     <div class="treeControls">
+      <button class="btn small ghost zbtn" id="btnZoomOut" aria-label="Zoom out" title="Zoom out">&minus;</button>
+      <button class="btn small ghost zbtn" id="btnZoomIn" aria-label="Zoom in" title="Zoom in">+</button>
       <button class="btn small ghost" id="btnFit">Fit</button>
+      <span class="vsep" aria-hidden="true"></span>
       <button class="btn small ghost" id="btnShowTasks">Show subtasks</button>
       <button class="btn small ghost" id="btnAlignTips" aria-pressed="false" title="Line up the ends of all visible branches in one column">Align tips</button>
       <button class="btn small ghost" id="btnExpandAll">Expand all</button>
@@ -355,10 +442,16 @@ const LS_KEY = "projectMenu.data.v1";
 const UI_KEY = "projectMenu.ui.v1";
 let DB = null;
 let serverMode = false;
-let ui = { view: "tree", selected: null, collapsed: [], showTasks: false, filterTags: [], filterMode: "any", search: "", showDone: false, focus: null, lastChild: {}, alignTips: false };
+let ui = { view: "tree", selected: null, collapsed: [], showTasks: false, filterTags: [], excludeTags: [], filterMode: "any", search: "", showDone: false, focus: null, lastChild: {}, alignTips: false };
 
 function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+// Touch support: the Android wrapper sets window.PMAndroid; phones and tablets report a coarse pointer
+const IS_ANDROID = !!window.PMAndroid;
+const coarseMQ = window.matchMedia("(pointer: coarse)");
+const isTouchUI = () => IS_ANDROID || coarseMQ.matches;
+let lastPointerType = "mouse";
+document.addEventListener("pointerdown", e => { lastPointerType = e.pointerType; }, true);
 
 async function load() {
   try { const u = JSON.parse(lsGet(UI_KEY) || "null"); if (u) ui = Object.assign(ui, u); } catch (e) {}
@@ -418,6 +511,7 @@ function matchFields(text, path, tags, done) {
     const has = t => tags.includes(t);
     if (ui.filterMode === "all" ? !ui.filterTags.every(has) : !ui.filterTags.some(has)) return false;
   }
+  if ((ui.excludeTags || []).some(t => tags.includes(t))) return false;
   return true;
 }
 function matches(item) { return matchFields(item.task.text, pathStr(item.node), item.tags, item.task.done); }
@@ -448,7 +542,7 @@ function objByKey(key) {
 }
 function setDue(key, val) { const o = objByKey(key); if (!o) return; if (val) o.due = val; else delete o.due; commit(); }
 function bindDue(root) { root.querySelectorAll("[data-due]").forEach(el => el.onchange = () => setDue(el.dataset.due, el.value)); }
-const filtersActive = () => ui.filterTags.length > 0 || !!ui.search;
+const filtersActive = () => ui.filterTags.length > 0 || (ui.excludeTags || []).length > 0 || !!ui.search;
 function pathStr(n) { return ancestors(n.id).map(a => a.name).join(" / "); }
 function chipHTML(t, extra = "") { return t ? `<span class="chip mini ${extra}"><span class="dot" style="background:${esc(t.color)}"></span>${esc(t.name)}</span>` : ""; }
 
@@ -463,22 +557,28 @@ function branchColor(n) { return BRANCH[branchIndex(n)]; }
 
 /* ---------- Header: search, filter popover, active filter chips ---------- */
 function renderFilterbar() {
-  const n = ui.filterTags.length;
+  if (!Array.isArray(ui.excludeTags)) ui.excludeTags = [];
+  const n = ui.filterTags.length + ui.excludeTags.length;
   const fbtn = document.getElementById("btnFilter");
   fbtn.innerHTML = `Filter${n ? `<span class="badge">${n}</span>` : ""}`;
   fbtn.classList.toggle("active", n > 0 || ui.showDone);
   const ac = document.getElementById("activeChips");
   ac.innerHTML = ui.filterTags.map(tag).filter(Boolean).map(t =>
     `<button class="chip on" data-rmft="${t.id}" title="Remove this filter"><span class="dot" style="background:${esc(t.color)}"></span>${esc(t.name)}<span class="x">&times;</span></button>`).join("") +
-    (n > 1 ? `<span class="mode">${ui.filterMode === "all" ? "all of these" : "any of these"}</span>` : "") +
+    ui.excludeTags.map(tag).filter(Boolean).map(t =>
+    `<button class="chip on not" data-rmxt="${t.id}" title="Stop hiding this tag"><span class="dot" style="background:${esc(t.color)}"></span>not ${esc(t.name)}<span class="x">&times;</span></button>`).join("") +
+    (ui.filterTags.length > 1 ? `<span class="mode">${ui.filterMode === "all" ? "all of these" : "any of these"}</span>` : "") +
     (ui.showDone ? `<span class="mode">including completed</span>` : "");
   ac.querySelectorAll("[data-rmft]").forEach(el => el.onclick = () => { ui.filterTags = ui.filterTags.filter(x => x !== el.dataset.rmft); saveUI(); render(); });
+  ac.querySelectorAll("[data-rmxt]").forEach(el => el.onclick = () => { ui.excludeTags = ui.excludeTags.filter(x => x !== el.dataset.rmxt); saveUI(); render(); });
   const s = document.getElementById("search");
   if (document.activeElement !== s && s.value !== ui.search) s.value = ui.search;
   const pop = document.getElementById("filterPop");
   if (pop.hidden) return;
   pop.innerHTML = `<div class="pop-title">Show tasks tagged</div>
     <div class="taglist">${DB.tags.map(t => `<button class="chip ${ui.filterTags.includes(t.id) ? "on" : ""}" data-ft="${t.id}"><span class="dot" style="background:${esc(t.color)}"></span>${esc(t.name)}</button>`).join("")}</div>
+    <div class="pop-title">Hide tasks tagged</div>
+    <div class="taglist">${DB.tags.map(t => `<button class="chip ${ui.excludeTags.includes(t.id) ? "on not" : ""}" data-xt="${t.id}"><span class="dot" style="background:${esc(t.color)}"></span>${esc(t.name)}</button>`).join("")}</div>
     <div class="row" style="justify-content:space-between">
       <span class="row" style="gap:6px"><span class="status">Match</span><span class="seg"><button data-fm="any" class="${ui.filterMode === "any" ? "on" : ""}">Any tag</button><button data-fm="all" class="${ui.filterMode === "all" ? "on" : ""}">All tags</button></span></span>
       <label class="check"><input type="checkbox" id="showDone" ${ui.showDone ? "checked" : ""}> Show completed</label>
@@ -487,11 +587,18 @@ function renderFilterbar() {
   pop.querySelectorAll("[data-ft]").forEach(el => el.onclick = () => {
     const id = el.dataset.ft;
     ui.filterTags = ui.filterTags.includes(id) ? ui.filterTags.filter(x => x !== id) : [...ui.filterTags, id];
+    ui.excludeTags = ui.excludeTags.filter(x => x !== id);
+    saveUI(); render();
+  });
+  pop.querySelectorAll("[data-xt]").forEach(el => el.onclick = () => {
+    const id = el.dataset.xt;
+    ui.excludeTags = ui.excludeTags.includes(id) ? ui.excludeTags.filter(x => x !== id) : [...ui.excludeTags, id];
+    ui.filterTags = ui.filterTags.filter(x => x !== id);
     saveUI(); render();
   });
   pop.querySelectorAll("[data-fm]").forEach(el => el.onclick = () => { ui.filterMode = el.dataset.fm; saveUI(); render(); });
   pop.querySelector("#showDone").onchange = e => { ui.showDone = e.target.checked; saveUI(); render(); };
-  const c = pop.querySelector("#clearF"); if (c) c.onclick = () => { ui.filterTags = []; ui.search = ""; ui.showDone = false; saveUI(); render(); };
+  const c = pop.querySelector("#clearF"); if (c) c.onclick = () => { ui.filterTags = []; ui.excludeTags = []; ui.search = ""; ui.showDone = false; saveUI(); render(); };
 }
 function togglePop(id, force) {
   const pop = document.getElementById(id);
@@ -627,6 +734,9 @@ function layout(root, fs) {
 
 function drawTree(all, P, fs, fa) {
   let links = "", nodes = "";
+  // Larger invisible tap targets on touch screens
+  const touch = isTouchUI();
+  const hit = r => touch ? `<circle class="hit" r="${r}"/>` : "";
   all.forEach(v => {
     if (!v.children.length) return;
     const p = P(v);
@@ -642,7 +752,7 @@ function drawTree(all, P, fs, fa) {
     const p = P(v);
     if (v.type === "root") {
       nodes += `<g class="node ${ui.selected === null && panelOpen ? "sel" : ""}" data-root="1" transform="translate(${p.x},${p.y})">
-        <circle r="7" style="fill:var(--ink)"/><text x="-12" y="4" text-anchor="end" class="name-group">All projects</text></g>`;
+        ${hit(20)}<circle r="7" style="fill:var(--ink)"/><text x="-12" y="4" text-anchor="end" class="name-group">All projects</text></g>`;
       return;
     }
     const tf = `translate(${p.x},${p.y}) scale(${p.s})`;
@@ -650,7 +760,7 @@ function drawTree(all, P, fs, fa) {
       const on = isOn(v, fs);
       const isFocus = ui.focus === v.key;
       nodes += `<g class="node tasknode ${isFocus ? "focus" : ""} ${on ? "" : "off"}" data-task="${v.t.id}" data-nid="${v.n.id}" transform="${tf}">
-        ${isFocus ? `<circle class="ring" r="8"/>` : ""}
+        ${hit(16)}${isFocus ? `<circle class="ring" r="8"/>` : ""}
         <circle r="4" style="fill:${v.t.done ? "var(--surface-2)" : "var(--surface)"};stroke:${branchColor(v.n)}"/>
         <text x="9" y="4" ${v.t.done ? 'text-decoration="line-through"' : ""}>${esc(v.t.text)}</text></g>`;
       return;
@@ -667,7 +777,7 @@ function drawTree(all, P, fs, fa) {
       : `<text x="${-(r + 4)}" y="${-(r + 3)}" text-anchor="end" class="name-group">${esc(n.name)}</text>`;
     const cnt = v.open && !isLeaf ? `<text class="count" x="${-(r + 4)}" y="${r + 13}" text-anchor="end">${cntTxt}</text>` : "";
     nodes += `<g class="node ${isFocus ? "focus" : ""} ${on ? "" : "off"} ${dim ? "dim" : ""} ${v.collapsed ? "collapsed" : ""}" data-nid="${n.id}" transform="${tf}">
-      ${isFocus ? `<circle class="ring" r="${r + 4.5}"/>` : ""}
+      ${hit(Math.max(20, r + 10))}${isFocus ? `<circle class="ring" r="${r + 4.5}"/>` : ""}
       <circle r="${r}" style="fill:${v.open ? col : "var(--surface)"};${v.open ? "" : "stroke:" + col + ";stroke-width:2"}"/>
       ${lbl}${cnt}${v.collapsed ? `<text class="count" x="${r + 6}" y="${isLeaf ? 18 : 4.5}">+${descendants(n.id).length} hidden</text>` : ""}</g>`;
   });
@@ -696,6 +806,8 @@ function renderTree() {
   }
   const a0 = anchorKey && from.get(anchorKey), a1 = anchorKey && to.get(anchorKey);
   const sx = a0 ? view.x + a0.x * view.k : 0, sy = a0 ? view.y + a0.y * view.k : 0;
+  // If the user pans or zooms mid-animation, stop pinning the anchor and do not scroll the view afterwards
+  const input0 = viewInput;
   const changed = all.some(v => { const a = from.get(v.key), b = to.get(v.key); return !a || a.x !== b.x || a.y !== b.y || a.s !== b.s; });
   const frame = e => {
     const cur = new Map();
@@ -706,11 +818,11 @@ function renderTree() {
     };
     drawTree(all, P, fs, fa);
     drawnPos = cur;
-    if (a0 && a1) { const p = P({ key: anchorKey }); view.x = sx - p.x * view.k; view.y = sy - p.y * view.k; }
+    if (a0 && a1 && input0 === viewInput) { const p = P({ key: anchorKey }); view.x = sx - p.x * view.k; view.y = sy - p.y * view.k; }
     applyView();
   };
   let finished = false;
-  const finish = () => { if (finished) return; finished = true; cancelAnimationFrame(treeAnim); clearTimeout(treeAnimTimer); frame(1); if (ui.focus) ensureVisible(ui.focus); };
+  const finish = () => { if (finished) return; finished = true; cancelAnimationFrame(treeAnim); clearTimeout(treeAnimTimer); frame(1); if (ui.focus && input0 === viewInput) ensureVisible(ui.focus); };
   if (!changed || reduceMotion()) { finish(); return; }
   const t0 = performance.now(), D = 300;
   const step = t => {
@@ -724,22 +836,31 @@ function renderTree() {
   treeAnimTimer = setTimeout(finish, D + 60);
 }
 
+// Set when a touch gesture (pan, pinch, long-press) should not also count as a tap
+let suppressTreeClick = false;
+function toggleCollapse(id) {
+  if (!id || (!kids(id).length && !ui.showTasks)) return false;
+  ui.collapsed = ui.collapsed.includes(id) ? ui.collapsed.filter(x => x !== id) : [...ui.collapsed, id];
+  treeAnchor = "n:" + id;
+  saveUI(); renderTree();
+  return true;
+}
 (function bindTreeEvents() {
   const g = document.getElementById("treeG");
   g.addEventListener("click", e => {
     const el = e.target.closest(".node"); if (!el) return;
     e.stopPropagation();
+    if (suppressTreeClick) { suppressTreeClick = false; return; }
     if (el.dataset.root) { openPanel(null); return; }
     setFocus(el.dataset.task ? "t:" + el.dataset.task : el.dataset.nid, { open: true });
   });
   g.addEventListener("dblclick", e => {
     const el = e.target.closest(".node"); if (!el) return;
     e.stopPropagation();
-    const id = el.dataset.nid; if (!id || el.dataset.task) return;
-    if (!kids(id).length && !ui.showTasks) return;
-    ui.collapsed = ui.collapsed.includes(id) ? ui.collapsed.filter(x => x !== id) : [...ui.collapsed, id];
-    treeAnchor = "n:" + id;
-    saveUI(); renderTree();
+    // On touch, collapsing is a long-press; a quick double tap should not collapse
+    if (lastPointerType === "touch") return;
+    if (el.dataset.task) return;
+    toggleCollapse(el.dataset.nid);
   });
 })();
 
@@ -815,11 +936,33 @@ function navTree(key) {
   }
 }
 
-function applyView() { document.getElementById("treeG").setAttribute("transform", `translate(${view.x},${view.y}) scale(${view.k})`); }
+// The view is drawn two ways: applyView() writes it into #treeG's transform attribute (repaints the tree,
+// always crisp); previewPan() moves the whole SVG with a CSS transform relative to the last written view
+// (compositor only, used while dragging). Gesture handlers only update `view` and schedule one write per frame.
+const treeG = document.getElementById("treeG"), treeSvg = document.getElementById("treeSvg");
+let drawnView = null, viewRaf = 0, viewRafPan = false;
+function applyView() {
+  if (viewRaf) { cancelAnimationFrame(viewRaf); viewRaf = 0; }
+  treeG.setAttribute("transform", `translate(${view.x},${view.y}) scale(${view.k})`);
+  drawnView = { ...view };
+  if (treeSvg.style.transform) treeSvg.style.transform = "";
+}
+function previewPan() {
+  if (!drawnView || drawnView.k !== view.k) { applyView(); return; }
+  treeSvg.style.transform = `translate(${view.x - drawnView.x}px,${view.y - drawnView.y}px)`;
+}
+// Coalesce view updates from input events into one DOM write per animation frame
+function scheduleView(pan) {
+  viewRafPan = !!pan;
+  if (!viewRaf) viewRaf = requestAnimationFrame(() => { viewRaf = 0; if (viewRafPan) previewPan(); else applyView(); });
+}
 const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-let viewAnim = null;
+let viewAnim = null, viewAnimTimer = null;
+// Bumped on every direct pan/zoom so running animations stop steering the view
+let viewInput = 0;
+function cancelViewAnim() { cancelAnimationFrame(viewAnim); clearTimeout(viewAnimTimer); viewInput++; }
 function animateView(to) {
-  cancelAnimationFrame(viewAnim);
+  cancelAnimationFrame(viewAnim); clearTimeout(viewAnimTimer);
   if (reduceMotion()) { Object.assign(view, to); applyView(); return; }
   const from = { ...view }, t0 = performance.now(), D = 240;
   const step = t => {
@@ -829,7 +972,7 @@ function animateView(to) {
     if (p < 1) viewAnim = requestAnimationFrame(step);
   };
   viewAnim = requestAnimationFrame(step);
-  setTimeout(() => { if (view.x !== to.x || view.y !== to.y) { cancelAnimationFrame(viewAnim); view.x = to.x; view.y = to.y; applyView(); } }, D + 60);
+  viewAnimTimer = setTimeout(() => { if (view.x !== to.x || view.y !== to.y) { cancelAnimationFrame(viewAnim); view.x = to.x; view.y = to.y; applyView(); } }, D + 60);
 }
 function ensureVisible(id) {
   const r = focusRef(id);
@@ -860,27 +1003,124 @@ function fitTree() {
   view.k = k; view.x = (W - (maxX - minX) * k) / 2 - minX * k; view.y = (H - (maxY - minY) * k) / 2 - minY * k;
   applyView();
 }
+const ZMIN = 0.25, ZMAX = 3;
+// Zoom so the screen point (mx, my) inside the tree stays put
+// defer: only update `view` now and draw it on the next animation frame (for high-rate input events)
+function zoomAt(k2, mx, my, defer) {
+  k2 = Math.max(ZMIN, Math.min(ZMAX, k2));
+  view.x = mx - (mx - view.x) * (k2 / view.k); view.y = my - (my - view.y) * (k2 / view.k); view.k = k2;
+  if (defer) scheduleView(); else applyView();
+}
+function zoomBy(f) {
+  cancelViewAnim();
+  const wrap = document.getElementById("treeWrap");
+  zoomAt(view.k * f, wrap.clientWidth / 2, wrap.clientHeight / 2);
+}
 (function setupPanZoom() {
   const wrap = document.getElementById("treeWrap");
-  let drag = null;
-  wrap.addEventListener("pointerdown", e => { if (e.target.closest(".node")) return; cancelAnimationFrame(viewAnim); drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false }; wrap.classList.add("dragging"); wrap.setPointerCapture(e.pointerId); });
+  const pts = new Map();   // active touch/pen/mouse pointers: id -> {x, y}
+  let drag = null, pinch = null, press = null, panning = false;
+  // The wrapper's position is read once per gesture, not on every move/wheel event
+  let rect = null, wheelIdle = null;
+  const getRect = () => rect || (rect = wrap.getBoundingClientRect());
+  window.addEventListener("resize", () => { rect = null; });
+  const local = (x, y) => { const r = getRect(); return { x: x - r.left, y: y - r.top }; };
+  const endPress = () => { if (press) { clearTimeout(press.timer); press = null; } };
+  const startPan = () => { if (!panning) { panning = true; wrap.classList.add("panning"); } };
+  // Write the final view into the SVG and drop the temporary CSS transform
+  const endPan = () => {
+    if (panning) { panning = false; wrap.classList.remove("panning"); }
+    if (viewRaf || treeSvg.style.transform) applyView();
+  };
+  const startPinch = () => {
+    const [a, b] = [...pts.values()];
+    const m = local((a.x + b.x) / 2, (a.y + b.y) / 2);
+    pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, k0: view.k, wx: (m.x - view.x) / view.k, wy: (m.y - view.y) / view.k };
+    drag = null; endPress(); suppressTreeClick = true;
+    endPan();
+  };
+  wrap.addEventListener("pointerdown", e => {
+    const onNode = e.target.closest(".node");
+    const touch = e.pointerType === "touch";
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    // Mouse on a node: leave it to click/dblclick, exactly as before
+    if (onNode && !touch) return;
+    suppressTreeClick = false;
+    cancelViewAnim();
+    // A new gesture: forget pointers whose "up" never arrived (for example, their node was redrawn)
+    if (e.isPrimary) { pts.clear(); pinch = null; endPress(); endPan(); rect = null; }
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 2) { startPinch(); return; }
+    if (pts.size > 2) return;
+    drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false, onNode: !!onNode, slop: touch ? 10 : 4 };
+    wrap.classList.add("dragging");
+    // Touch pointers are implicitly captured by their target; capturing on the wrapper would retarget the tap
+    if (!touch) wrap.setPointerCapture(e.pointerId);
+    // Long-press a project to collapse or expand it (touch stand-in for double-click)
+    if (touch && onNode && onNode.dataset.nid && !onNode.dataset.task) {
+      const id = onNode.dataset.nid;
+      press = { timer: setTimeout(() => {
+        press = null;
+        if (!drag || drag.moved || pts.size !== 1) return;
+        if (toggleCollapse(id)) { suppressTreeClick = true; drag = null; try { navigator.vibrate && navigator.vibrate(15); } catch (err) {} }
+      }, 500) };
+    }
+  });
   wrap.addEventListener("pointermove", e => {
+    if (!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && pts.size >= 2) {
+      const [a, b] = [...pts.values()];
+      const m = local((a.x + b.x) / 2, (a.y + b.y) / 2);
+      const k2 = Math.max(ZMIN, Math.min(ZMAX, pinch.k0 * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d0));
+      view.k = k2; view.x = m.x - pinch.wx * k2; view.y = m.y - pinch.wy * k2;
+      scheduleView();
+      return;
+    }
     if (!drag) return;
-    if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 4) drag.moved = true;
-    view.x = drag.vx + e.clientX - drag.x; view.y = drag.vy + e.clientY - drag.y; applyView();
+    if (!drag.moved && Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > drag.slop) {
+      drag.moved = true; endPress();
+      if (drag.onNode) suppressTreeClick = true;
+      // Pan from where the finger is now so the slop does not cause a jump
+      if (e.pointerType === "touch") { drag.x = e.clientX; drag.y = e.clientY; }
+    }
+    if (drag.moved || e.pointerType !== "touch") {
+      view.x = drag.vx + e.clientX - drag.x; view.y = drag.vy + e.clientY - drag.y;
+      startPan(); scheduleView(true);
+    }
   });
-  wrap.addEventListener("pointerup", () => {
-    if (drag && !drag.moved && ui.focus && !panelOpen) clearFocus();
-    drag = null; wrap.classList.remove("dragging");
-  });
-  wrap.addEventListener("pointercancel", () => { drag = null; wrap.classList.remove("dragging"); });
+  const up = e => {
+    if (!pts.has(e.pointerId)) return;
+    pts.delete(e.pointerId);
+    endPress();
+    if (pinch) {
+      if (pts.size < 2) { pinch = null; endPan(); }
+      // Continue panning with the finger that is still down
+      if (pts.size === 1) { const [p] = [...pts.values()]; drag = { x: p.x, y: p.y, vx: view.x, vy: view.y, moved: true, onNode: false, slop: 10 }; }
+      if (!pts.size) { drag = null; wrap.classList.remove("dragging"); }
+      return;
+    }
+    if (!pts.size) {
+      endPan();
+      if (e.type === "pointerup" && drag && !drag.moved && !drag.onNode && ui.focus && !panelOpen) clearFocus();
+      drag = null; wrap.classList.remove("dragging");
+    }
+  };
+  wrap.addEventListener("pointerup", up);
+  wrap.addEventListener("pointercancel", up);
+  wrap.addEventListener("lostpointercapture", e => { if (pts.has(e.pointerId) && e.pointerType !== "touch") up(e); });
+  wrap.addEventListener("contextmenu", e => { if (lastPointerType !== "mouse") e.preventDefault(); });
   wrap.addEventListener("wheel", e => {
     e.preventDefault();
-    cancelAnimationFrame(viewAnim);
-    const rect = wrap.getBoundingClientRect(), mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    const k2 = Math.max(0.25, Math.min(3, view.k * Math.exp(-e.deltaY * 0.0015)));
-    view.x = mx - (mx - view.x) * (k2 / view.k); view.y = my - (my - view.y) * (k2 / view.k); view.k = k2;
-    applyView();
+    cancelViewAnim();
+    const r = getRect();
+    // Normalize line/page wheel units to pixels so every mouse and browser zooms at a similar rate
+    let dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? r.height : 1);
+    dy = Math.max(-300, Math.min(300, dy));
+    // ctrlKey + wheel is a trackpad pinch: small deltas, so it gets a stronger factor
+    zoomAt(view.k * Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.002)), e.clientX - r.left, e.clientY - r.top, true);
+    clearTimeout(wheelIdle);
+    wheelIdle = setTimeout(() => { rect = null; }, 200);
   }, { passive: false });
 })();
 
@@ -1034,16 +1274,19 @@ function todoTile(it, compact) {
   const late = it.due && !it.done && it.due < todayYmd();
   const nMedia = (it.obj.media || []).length;
   const dots = it.tags.map(id => { const t = tag(id); return t ? `<span class="tdot" title="${esc(t.name)}" style="background:${esc(t.color)}"></span>` : ""; }).join("");
-  return `<article class="tile tile-${it.kind} ${it.done ? "done" : ""} ${late ? "late" : ""} ${compact ? "compact" : ""}" draggable="true" data-drag="${it.key}" style="--tc:${branchColor(it.node)}">
+  const touch = isTouchUI();
+  const dateBtn = `<label class="datebtn ${it.due ? "" : "unset"}" title="Change date">${it.due ? esc(shortDue(it.due)) : "Set date"}<input type="date" data-due="${it.key}" value="${it.due || ""}"></label>`;
+  // On touch screens HTML5 drag is replaced by a long-press drag (see bindTouchDrag)
+  return `<article class="tile tile-${it.kind} ${it.done ? "done" : ""} ${late ? "late" : ""} ${compact ? "compact" : ""}" draggable="${touch ? "false" : "true"}" data-drag="${it.key}" style="--tc:${branchColor(it.node)}">
     <div class="tile-head">
       ${it.kind === "task" ? `<input type="checkbox" data-done="${it.obj.id}" ${it.done ? "checked" : ""} aria-label="Mark done">` : `<span class="pmark" title="Project"></span>`}
       <button class="tile-path" data-open="${it.node.id}" title="${esc(it.path)}"><bdi>${esc(it.path)}</bdi></button>
     </div>
     <div class="tile-txt">${esc(it.text)}</div>
-    ${compact ? "" : `<div class="tile-foot">
+    ${compact ? (touch ? `<div class="tile-foot"><span class="tdots"></span>${dateBtn}</div>` : "") : `<div class="tile-foot">
       <span class="tdots">${dots}</span>
       ${nMedia ? `<span class="tmeta">${nMedia} attached</span>` : ""}
-      <label class="datebtn ${it.due ? "" : "unset"}" title="Change date">${it.due ? esc(shortDue(it.due)) : "Set date"}<input type="date" data-due="${it.key}" value="${it.due || ""}"></label>
+      ${dateBtn}
     </div>`}
   </article>`;
 }
@@ -1109,9 +1352,12 @@ function renderTodo() {
   el.querySelectorAll("[data-open]").forEach(p => p.onclick = e => { e.stopPropagation(); openPanel(p.dataset.open); });
   bindTaskChecks(el); bindDue(el);
   el.querySelectorAll(".datebtn input").forEach(inp => inp.addEventListener("click", e => { e.stopPropagation(); try { inp.showPicker(); } catch (err) {} }));
-  // Drag and drop
+  // Drag and drop (HTML5 for mouse; touch uses the long-press drag in bindTouchDrag)
   el.querySelectorAll("[data-drag]").forEach(r => {
-    r.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", r.dataset.drag); e.dataTransfer.effectAllowed = "move"; r.classList.add("dragging"); });
+    r.addEventListener("dragstart", e => {
+      if (touchDrag) { e.preventDefault(); return; }
+      e.dataTransfer.setData("text/plain", r.dataset.drag); e.dataTransfer.effectAllowed = "move"; r.classList.add("dragging");
+    });
     r.addEventListener("dragend", () => r.classList.remove("dragging"));
   });
   el.querySelectorAll(".dropzone").forEach(z => {
@@ -1119,10 +1365,93 @@ function renderTodo() {
     z.addEventListener("dragleave", e => { if (!z.contains(e.relatedTarget)) z.classList.remove("over"); });
     z.addEventListener("drop", e => {
       e.preventDefault(); e.stopPropagation(); z.classList.remove("over");
-      const key = e.dataTransfer.getData("text/plain"); if (key && objByKey(key)) setDue(key, z.dataset.drop);
+      dropTile(e.dataTransfer.getData("text/plain"), z);
     });
   });
 }
+// Shared by the HTML5 drop handler and the touch drag: give the item the zone's date ("" clears it)
+function dropTile(key, zone) {
+  if (key && zone && objByKey(key)) setDue(key, zone.dataset.drop);
+}
+
+/* Touch drag for to-do tiles: long-press a tile to lift it, move it over a day or an
+   Unscheduled button, and let go. A floating copy follows the finger. */
+let touchDrag = null; // { key, tile, ghost, dx, dy, zone, x, y, scrollRaf }
+function cancelTouchDrag() {
+  if (!touchDrag) return false;
+  const d = touchDrag; touchDrag = null;
+  cancelAnimationFrame(d.scrollRaf);
+  d.ghost && d.ghost.remove();
+  d.tile.classList.remove("dragging", "lifting");
+  d.zone && d.zone.classList.remove("over");
+  document.body.classList.remove("touch-dragging");
+  return true;
+}
+(function bindTouchDrag() {
+  const root = document.getElementById("todo");
+  let pending = null; // { tile, x, y, timer, id }
+  const clearPending = () => { if (pending) { clearTimeout(pending.timer); pending.tile.classList.remove("lifting"); pending = null; } };
+  const zoneAt = (x, y) => { const t = document.elementFromPoint(x, y); return t ? t.closest("#todo .dropzone") : null; };
+  const place = () => {
+    const d = touchDrag; if (!d) return;
+    d.ghost.style.left = (d.x - d.dx) + "px"; d.ghost.style.top = (d.y - d.dy) + "px";
+    const z = zoneAt(d.x, d.y);
+    if (z !== d.zone) { d.zone && d.zone.classList.remove("over"); z && z.classList.add("over"); d.zone = z; }
+  };
+  // Scroll the to-do list while the finger rests near its top or bottom edge
+  const autoScroll = () => {
+    const d = touchDrag; if (!d) return;
+    const r = root.getBoundingClientRect(), edge = 60;
+    let v = 0;
+    if (d.y < r.top + edge) v = -Math.ceil((r.top + edge - d.y) / 4);
+    else if (d.y > r.bottom - edge) v = Math.ceil((d.y - (r.bottom - edge)) / 4);
+    if (v) { root.scrollTop += v; place(); }
+    d.scrollRaf = requestAnimationFrame(autoScroll);
+  };
+  const lift = () => {
+    const p = pending; pending = null;
+    const tile = p.tile, r = tile.getBoundingClientRect();
+    const ghost = tile.cloneNode(true);
+    ghost.classList.remove("lifting"); ghost.classList.add("tile-ghost");
+    ghost.removeAttribute("data-drag");
+    ghost.querySelectorAll("[id]").forEach(n => n.removeAttribute("id"));
+    ghost.style.width = r.width + "px";
+    document.body.appendChild(ghost);
+    tile.classList.remove("lifting"); tile.classList.add("dragging");
+    document.body.classList.add("touch-dragging");
+    touchDrag = { key: tile.dataset.drag, tile, ghost, dx: p.x - r.left, dy: p.y - r.top, zone: null, x: p.x, y: p.y, id: p.id, scrollRaf: 0 };
+    try { navigator.vibrate && navigator.vibrate(15); } catch (err) {}
+    place();
+    touchDrag.scrollRaf = requestAnimationFrame(autoScroll);
+  };
+  root.addEventListener("pointerdown", e => {
+    if (e.pointerType !== "touch" || !e.isPrimary) return;
+    const tile = e.target.closest(".tile[data-drag]");
+    if (!tile || e.target.closest("input, button, label, a, select, textarea")) return;
+    clearPending(); cancelTouchDrag();
+    pending = { tile, x: e.clientX, y: e.clientY, id: e.pointerId, timer: setTimeout(lift, 450) };
+    tile.classList.add("lifting");
+  });
+  document.addEventListener("pointermove", e => {
+    if (pending && e.pointerId === pending.id && Math.abs(e.clientX - pending.x) + Math.abs(e.clientY - pending.y) > 10) clearPending();
+    if (touchDrag && e.pointerId === touchDrag.id) { touchDrag.x = e.clientX; touchDrag.y = e.clientY; place(); }
+  });
+  // Once a tile is lifted, stop the finger from scrolling the page instead
+  document.addEventListener("touchmove", e => { if (touchDrag && e.cancelable) e.preventDefault(); }, { passive: false });
+  document.addEventListener("pointerup", e => {
+    if (pending && e.pointerId === pending.id) clearPending();
+    if (touchDrag && e.pointerId === touchDrag.id) {
+      const key = touchDrag.key, zone = touchDrag.zone;
+      cancelTouchDrag();
+      dropTile(key, zone);
+    }
+  });
+  document.addEventListener("pointercancel", e => {
+    if (pending && e.pointerId === pending.id) clearPending();
+    if (touchDrag && e.pointerId === touchDrag.id) cancelTouchDrag();
+  });
+  root.addEventListener("contextmenu", e => { if (pending || touchDrag) e.preventDefault(); });
+})();
 
 /* ---------- Media attachments ---------- */
 let rec = null; // { mr, key, start }
@@ -1152,7 +1481,7 @@ function mediaBlock(key, list) {
   return `<div class="media" data-mkey="${key}">
     <div class="mgrid">${list.map(m => mediaTile(m, key)).join("")}</div>
     <div class="row madd">
-      <button class="btn small" data-mfile="${key}" ${serverMode ? "" : "disabled"}>Add files</button>
+      <button class="btn ${isTouchUI() ? "" : "small"}" data-mfile="${key}" ${serverMode ? "" : "disabled"}>Add files</button>
       <button class="btn small ${recording ? "rec" : ""}" data-mrec="${key}" ${serverMode ? "" : "disabled"}>${recording ? "Stop recording" : "Record audio"}</button>
     </div>
     <div class="row madd" style="margin-top:6px"><input data-mlinkin="${key}" placeholder="Paste a link"><button class="btn small" data-mlink="${key}">Add link</button></div>
@@ -1163,7 +1492,7 @@ function addMedia(key, item) {
   (o.media = o.media || []).push(Object.assign({ id: uid("m"), addedAt: new Date().toISOString() }, item));
 }
 async function uploadFiles(key, files) {
-  if (!serverMode) { alert("Start the app with Open Project Menu.bat to attach files."); return; }
+  if (!serverMode) { alert(IS_ANDROID ? "Attaching files is not available right now." : "Start the app with Open Project Menu.bat to attach files."); return; }
   for (const f of files) {
     setStatus(`Uploading ${f.name}...`);
     try {
@@ -1253,11 +1582,23 @@ function closeModal() {
   document.getElementById("modalBg").classList.remove("open");
 }
 document.getElementById("modalBg").addEventListener("click", e => { if (e.target.id === "modalBg") closeModal(); });
+function closePops() { document.querySelectorAll(".pop").forEach(p => { p.hidden = true; p.previousElementSibling?.setAttribute("aria-expanded", "false"); }); }
+const modalIsOpen = () => document.getElementById("modalBg").classList.contains("open");
+/* Android back button: undo the most local piece of UI state, one step per press.
+   Returns true if it did something; false lets the app exit. Mirrors Escape. */
+window.pmHandleBack = () => {
+  if (cancelTouchDrag()) return true;
+  if (modalIsOpen()) { closeModal(); return true; }
+  if (anyPopOpen()) { closePops(); return true; }
+  if (panelOpen) { closePanel(); return true; }
+  if (ui.focus && ui.view === "tree") { clearFocus(); return true; }
+  return false;
+};
 document.addEventListener("keydown", e => {
-  const modalOpen = document.getElementById("modalBg").classList.contains("open");
+  const modalOpen = modalIsOpen();
   if (e.key === "Escape") {
     if (modalOpen) closeModal();
-    else if (anyPopOpen()) document.querySelectorAll(".pop").forEach(p => { p.hidden = true; p.previousElementSibling?.setAttribute("aria-expanded", "false"); });
+    else if (anyPopOpen()) closePops();
     else escapeTree();
     return;
   }
@@ -1273,27 +1614,40 @@ document.addEventListener("keydown", e => {
 });
 
 function openHelp() {
-  openModal(`<h2>How Project Menu works</h2><div class="help">
-    <h3>Tree</h3><ul>
+  const touch = isTouchUI();
+  const back = IS_ANDROID ? "The Back button" : "";
+  const treeHelp = touch ? `
+      <li>Tap a project to highlight its branch and open its details. The highlighted branch grows and the rest shrinks.</li>
+      <li>Tap a name in the bar at the top of the tree to move up the branch. Tap empty space to clear the highlight.</li>
+      ${back ? `<li>${back} closes dialogs and menus, then details, then clears the highlight.</li>` : ""}
+      <li>Press and hold a project to collapse or expand it.</li>
+      <li>Drag with one finger to pan. Pinch to zoom, or use the <b>+</b> and <b>&minus;</b> buttons. <b>Fit</b> shows the whole tree.</li>
+      <li><b>Align tips</b> lines up the ends of all visible branches in one column.</li>
+      <li>Circle size shows how many open subtasks sit below a project.</li>` : `
       <li>Click a project to highlight its branch and open its details. The highlighted branch grows and the rest shrinks.</li>
       <li><kbd>&uarr;</kbd><kbd>&darr;</kbd> jump to the neighboring branch at the same level.</li>
       <li><kbd>&larr;</kbd><kbd>&rarr;</kbd> move shallower or deeper along the branch. <kbd>&rarr;</kbd> on a lowest-level project steps into its subtasks; <kbd>&larr;</kbd> on a top-level group clears the highlight.</li>
       <li><b>Align tips</b> lines up the ends of all visible branches in one column.</li>
       <li><kbd>Enter</kbd> opens or closes details. <kbd>Esc</kbd> closes details, then clears the highlight.</li>
       <li>Double-click a project to collapse or expand it. Scroll to zoom, drag to pan.</li>
-      <li>Circle size shows how many open subtasks sit below a project.</li></ul>
+      <li>Circle size shows how many open subtasks sit below a project.</li>`;
+  openModal(`<h2>How Project Menu works</h2><div class="help">
+    <h3>Tree</h3><ul>${treeHelp}</ul>
     <h3>Tags and filters</h3><ul>
       <li>Tags on a project or group apply to every subtask below it. Dashed tags are inherited.</li>
       <li><b>Filter</b> narrows the tree, the to-do list and <b>Pick something</b> to matching tasks.</li>
-      <li><kbd>/</kbd> jumps to search. <kbd>?</kbd> opens this help.</li></ul>
+      ${touch ? "" : `<li><kbd>/</kbd> jumps to search. <kbd>?</kbd> opens this help.</li>`}</ul>
     <h3>To-do</h3><ul>
-      <li>Drag tiles between days, or onto an <b>Unscheduled</b> button to clear the date.</li>
-      <li>Click the date on a tile to change it. Click the path above a task to open its project.</li></ul>
+      ${touch
+        ? `<li>Press and hold a tile, then drag it to another day, or onto an <b>Unscheduled</b> button to clear the date.</li>
+      <li>Tap the date on a tile to change it. Tap the path above a task to open its project.</li>`
+        : `<li>Drag tiles between days, or onto an <b>Unscheduled</b> button to clear the date.</li>
+      <li>Click the date on a tile to change it. Click the path above a task to open its project.</li>`}</ul>
     <h3>Attachments</h3><ul>
-      <li>Add photos, videos, audio recordings, files or links to any project or subtask. You can drop files onto the attachments area.</li>
-      <li>Files need the app to be started with <b>Open Project Menu.bat</b>. Links work either way.</li></ul>
+      <li>Add photos, videos, audio recordings, files or links to any project or subtask. ${touch ? "Tap <b>Add files</b> to pick them." : "You can drop files onto the attachments area."}</li>
+      ${IS_ANDROID ? "" : `<li>Files need the app to be started with <b>Open Project Menu.bat</b>. Links work either way.</li>`}</ul>
     <h3>Saving</h3><ul>
-      <li>Changes save to projects.json automatically, with a daily backup in the backups folder. Use <b>More</b> to export or import a backup.</li></ul>
+      <li>${IS_ANDROID ? "Changes save on this device automatically." : "Changes save to projects.json automatically, with a daily backup in the backups folder."} Use <b>More</b> to export or import a backup.</li></ul>
   </div><div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn primary" id="mDone">Done</button></div>`, m => m.querySelector("#mDone").onclick = closeModal);
 }
 
@@ -1309,7 +1663,7 @@ function tagManager() {
       const id = el.dataset.tx; if (!confirm(`Delete tag "${tag(id).name}"? It will be removed from all projects and tasks.`)) return;
       DB.tags = DB.tags.filter(t => t.id !== id);
       DB.nodes.forEach(n => { n.tags = (n.tags || []).filter(x => x !== id); (n.tasks || []).forEach(t => t.tags = (t.tags || []).filter(x => x !== id)); });
-      ui.filterTags = ui.filterTags.filter(x => x !== id); commit(); tagManager();
+      ui.filterTags = ui.filterTags.filter(x => x !== id); ui.excludeTags = (ui.excludeTags || []).filter(x => x !== id); commit(); tagManager();
     });
     const nt = m.querySelector("#newTag");
     const add = () => { const v = nt.value.trim(); if (!v) return; DB.tags.push({ id: uid("t"), name: v, color: BRANCH[DB.tags.length % BRANCH.length] }); commit(); tagManager(); document.getElementById("newTag").focus(); };
@@ -1320,7 +1674,9 @@ function tagManager() {
 
 function pickSomething() {
   const pool = allTasks().filter(it => !it.task.done && matches(it));
-  const desc = ui.filterTags.length ? ` matching ${ui.filterTags.map(id => tag(id)?.name).filter(Boolean).join(ui.filterMode === "all" ? " + " : " or ")}` : "";
+  const xs = (ui.excludeTags || []).map(id => tag(id)?.name).filter(Boolean);
+  const desc = (ui.filterTags.length ? ` matching ${ui.filterTags.map(id => tag(id)?.name).filter(Boolean).join(ui.filterMode === "all" ? " + " : " or ")}` : "")
+    + (xs.length ? ` without ${xs.join(" or ")}` : "");
   if (!pool.length) { openModal(`<h2>Nothing to pick</h2><p>No open subtasks${desc}. Try clearing a filter.</p><div class="row" style="justify-content:flex-end"><button class="btn" id="mDone">OK</button></div>`, m => m.querySelector("#mDone").onclick = closeModal); return; }
   const it = pool[Math.floor(Math.random() * pool.length)];
   openModal(`<h2>How about this?</h2>
@@ -1336,9 +1692,13 @@ function pickSomething() {
 
 /* ---------- Export / import ---------- */
 document.getElementById("btnExport").onclick = () => {
-  const blob = new Blob([JSON.stringify(DB, null, 2)], { type: "application/json" });
+  const text = JSON.stringify(DB, null, 2);
+  const filename = `project-menu-${new Date().toISOString().slice(0, 10)}.json`;
+  // Android wrapper: hand the file to the native save dialog
+  if (window.pmNative && pmNative.saveTextFile) { pmNative.saveTextFile(filename, "application/json", text); return; }
+  const blob = new Blob([text], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-  a.download = `project-menu-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(a.href);
+  a.download = filename; a.click(); URL.revokeObjectURL(a.href);
 };
 document.getElementById("btnImport").onclick = () => document.getElementById("importFile").click();
 document.getElementById("importFile").onchange = async e => {
@@ -1371,6 +1731,8 @@ document.getElementById("tabTodo").onclick = () => setView("todo");
 document.getElementById("btnTags").onclick = tagManager;
 document.getElementById("btnPick").onclick = pickSomething;
 document.getElementById("btnFit").onclick = fitTree;
+document.getElementById("btnZoomIn").onclick = () => zoomBy(1.25);
+document.getElementById("btnZoomOut").onclick = () => zoomBy(0.8);
 document.getElementById("btnShowTasks").onclick = () => { ui.showTasks = !ui.showTasks; saveUI(); needFit = true; renderTree(); };
 document.getElementById("btnAlignTips").onclick = () => { ui.alignTips = !ui.alignTips; saveUI(); needFit = true; renderTree(); };
 document.getElementById("btnExpandAll").onclick =() => { ui.collapsed = []; saveUI(); needFit = true; renderTree(); };
@@ -1379,6 +1741,8 @@ document.getElementById("btnHelp").onclick = openHelp;
 document.getElementById("btnFilter").onclick = () => togglePop("filterPop");
 document.getElementById("btnMore").onclick = () => togglePop("morePop");
 document.querySelectorAll("#morePop .menuitem").forEach(b => b.addEventListener("click", () => togglePop("morePop", false)));
+// Re-render if the primary input changes (for example, a tablet docked to a keyboard)
+try { coarseMQ.addEventListener("change", () => { if (DB) render(); }); } catch (e) {}
 let resizeTimer = null;
 window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (ui.view === "tree") fitTree(); }, 80); });
 if (document.fonts) document.fonts.ready.then(() => { needFit = true; if (DB && ui.view === "tree") renderTree(); });

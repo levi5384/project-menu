@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "project-menu",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["server.py", "8799", "--no-browser"],
+      "port": 8799
+    }
+  ]
+}
