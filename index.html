@@ -266,7 +266,9 @@ header { padding-top: max(8px, env(safe-area-inset-top)); padding-left: max(16px
 .treeControls .zbtn { min-width: 30px; font-weight: 600; }
 .treeControls .vsep { width: 1px; background: var(--line); margin: 3px 2px; flex: none; }
 #treeWrap { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-.node .hit { fill: transparent; stroke: none !important; }
+.node .hit { fill: transparent; stroke: none !important; cursor: pointer; }
+/* The whole label box is clickable, not just the letters (Chromium; others fall back to the glyphs) */
+.node text { pointer-events: bounding-box; }
 #todo { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .pbody { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .modal-bg { padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
@@ -778,9 +780,10 @@ function layout(root, fs) {
 
 function drawTree(all, P, fs, fa) {
   let links = "", nodes = "";
-  // Larger invisible tap targets on touch screens
+  // Invisible click targets around each dot. Touch gets larger ones; with a mouse they stop at
+  // half a row (ROW / TROW) so neighboring nodes never overlap.
   const touch = isTouchUI();
-  const hit = r => touch ? `<circle class="hit" r="${r}"/>` : "";
+  const hit = (rTouch, rMouse) => `<circle class="hit" r="${touch ? rTouch : rMouse}"/>`;
   all.forEach(v => {
     if (!v.children.length) return;
     const p = P(v);
@@ -795,7 +798,7 @@ function drawTree(all, P, fs, fa) {
     const p = P(v);
     if (v.type === "root") {
       nodes += `<g class="node ${ui.selected === null && panelOpen ? "sel" : ""}" data-root="1" transform="translate(${p.x},${p.y})">
-        ${hit(20)}<circle r="7" style="fill:var(--ink)"/><text x="-12" y="4" text-anchor="end" class="name-group">All projects</text></g>`;
+        ${hit(20, 16)}<circle r="7" style="fill:var(--ink)"/><text x="-12" y="4" text-anchor="end" class="name-group">All projects</text></g>`;
       return;
     }
     const tf = `translate(${p.x},${p.y}) scale(${p.s})`;
@@ -803,7 +806,7 @@ function drawTree(all, P, fs, fa) {
       const on = isOn(v, fs);
       const isFocus = ui.focus === v.key;
       nodes += `<g class="node tasknode ${isFocus ? "focus" : ""} ${on ? "" : "off"}" data-task="${v.t.id}" data-nid="${v.n.id}" transform="${tf}">
-        ${hit(16)}${isFocus ? `<circle class="ring" r="8"/>` : ""}
+        ${hit(16, TROW / 2)}${isFocus ? `<circle class="ring" r="8"/>` : ""}
         <circle r="4" style="fill:${v.t.done ? "var(--surface-2)" : "var(--surface)"};stroke:${branchColor(v.n)}"/>
         <text x="9" y="4" ${v.t.done ? 'text-decoration="line-through"' : ""}>${esc(v.t.text)}</text></g>`;
       return;
@@ -819,7 +822,7 @@ function drawTree(all, P, fs, fa) {
       : `<text x="${-(r + 4)}" y="${-(r + 3)}" text-anchor="end" class="name-group">${esc(n.name)}</text>`;
     const cnt = v.open && !isLeaf ? `<text class="count" x="${-(r + 4)}" y="${r + 13}" text-anchor="end">${cntTxt}</text>` : "";
     nodes += `<g class="node ${isFocus ? "focus" : ""} ${on ? "" : "off"} ${v.collapsed ? "collapsed" : ""}" data-nid="${n.id}" transform="${tf}">
-      ${hit(Math.max(20, r + 10))}${isFocus ? `<circle class="ring" r="${r + 4.5}"/>` : ""}
+      ${hit(Math.max(20, r + 10), Math.max(ROW / 2, r + 4))}${isFocus ? `<circle class="ring" r="${r + 4.5}"/>` : ""}
       <circle r="${r}" style="fill:${v.open ? col : "var(--surface)"};${v.open ? "" : "stroke:" + col + ";stroke-width:2"}"/>
       ${lbl}${cnt}${v.collapsed ? `<text class="count" x="${r + 6}" y="${isLeaf ? 18 : 4.5}">+${descendants(n.id).length} hidden</text>` : ""}</g>`;
   });
@@ -889,21 +892,52 @@ function toggleCollapse(id) {
 }
 (function bindTreeEvents() {
   const g = document.getElementById("treeG");
+  const activate = d => {
+    if (d.root) { openPanel(null); return; }
+    setFocus(d.task ? "t:" + d.task : d.nid, { open: true });
+  };
+  // Mouse and pen: a click highlights and animates the tree, which redraws the node under
+  // the cursor. A press and release then land on different elements, so the browser drops
+  // the click and dblclick. Track press/release ourselves and remember which node was pressed.
+  let down = null, lastUp = null;
+  g.addEventListener("pointerdown", e => {
+    if (e.pointerType === "touch" || e.button !== 0) return;
+    const el = e.target.closest(".node"); if (!el) return;
+    const now = performance.now();
+    down = { root: el.dataset.root, task: el.dataset.task, nid: el.dataset.nid, x: e.clientX, y: e.clientY };
+    // Second press on the same project soon after the first: collapse or expand it
+    if (!down.root && !down.task && lastUp && lastUp.nid === down.nid && now - lastUp.t < 450 &&
+        Math.abs(e.clientX - lastUp.x) + Math.abs(e.clientY - lastUp.y) < 12) {
+      const prev = lastUp.prev, id = down.nid;
+      lastUp = null; down.dbl = true;
+      // Undo the highlight the first click made, so collapsing does not spotlight the project.
+      // A previous highlight that the collapse would hide is dropped instead.
+      const collapsing = !ui.collapsed.includes(id);
+      const pr = focusRef(prev.focus);
+      const hiddenByCollapse = pr && collapsing && (pr.t ? ancestors(pr.n.id) : ancestors(pr.n.id).slice(0, -1)).some(a => a.id === id);
+      ui.focus = pr && !hiddenByCollapse ? prev.focus : null;
+      ui.selected = prev.selected; panelOpen = prev.panelOpen; tagEditTask = null;
+      if (!toggleCollapse(id)) { saveUI(); renderTree(); }
+      renderPanel();
+    }
+  });
+  window.addEventListener("pointerup", e => {
+    if (!down || e.pointerType === "touch") return;
+    const d = down; down = null;
+    if (d.dbl || Math.abs(e.clientX - d.x) + Math.abs(e.clientY - d.y) > 6) { lastUp = null; return; }
+    lastUp = { nid: d.nid, t: performance.now(), x: e.clientX, y: e.clientY,
+               prev: { focus: ui.focus, selected: ui.selected, panelOpen } };
+    activate(d);
+  });
+  // Touch taps (and keyboard or scripted clicks) still come through click
   g.addEventListener("click", e => {
     const el = e.target.closest(".node"); if (!el) return;
     e.stopPropagation();
     if (suppressTreeClick) { suppressTreeClick = false; return; }
-    if (el.dataset.root) { openPanel(null); return; }
-    setFocus(el.dataset.task ? "t:" + el.dataset.task : el.dataset.nid, { open: true });
+    if (e.detail > 0 && e.pointerType !== "touch" && lastPointerType !== "touch") return;
+    activate(el.dataset);
   });
-  g.addEventListener("dblclick", e => {
-    const el = e.target.closest(".node"); if (!el) return;
-    e.stopPropagation();
-    // On touch, collapsing is a long-press; a quick double tap should not collapse
-    if (lastPointerType === "touch") return;
-    if (el.dataset.task) return;
-    toggleCollapse(el.dataset.nid);
-  });
+  g.addEventListener("dblclick", e => { if (e.target.closest(".node")) e.stopPropagation(); });
 })();
 
 function renderFocusBar() {
