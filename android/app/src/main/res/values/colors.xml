@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mirrors the bg and surface CSS variables in index.html (light) -->
+    <color name="page_bg">#E8EBE3</color>
+    <color name="page_surface">#F7F8F4</color>
+    <color name="ic_launcher_background">#2F5D46</color>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mirrors the bg and surface CSS variables in index.html (dark) -->
+    <color name="page_bg">#111613</color>
+    <color name="page_surface">#181E1A</color>
+</resources>

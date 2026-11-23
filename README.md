@@ -34,6 +34,16 @@ then kept in the browser's localStorage, and file attachments are unavailable.
 The app follows your system's light or dark setting. Use More > Theme to
 force light or dark.
 
+## Touch (phones and tablets)
+
+- Tap a project to highlight it and open its details; tap empty space to clear
+  the highlight. The Android Back button closes dialogs and menus, then
+  details, then clears the highlight.
+- Drag with one finger to pan the tree, pinch to zoom, or use the + and -
+  buttons. Press and hold a project to collapse or expand it.
+- In the To-do view, press and hold a tile, then drag it to another day or
+  onto an Unscheduled button. You can also tap a tile's date to change it.
+
 ## Tree view options
 
 - Show subtasks: display subtasks as nodes in the tree.
