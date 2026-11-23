@@ -27,6 +27,12 @@ then kept in the browser's localStorage, and file attachments are unavailable.
 - Arrow keys move the highlight through the tree. Right goes deeper (down to
   subtasks), Left goes back up, and Left on a top-level item clears it.
 - Escape clears the highlight.
+- `/` jumps to search, `?` opens help.
+
+## Appearance
+
+The app follows your system's light or dark setting. Use More > Theme to
+force light or dark.
 
 ## Tree view options
 
